@@ -14,15 +14,13 @@ source install/setup.bash
 
 ```bash
 cd ~/turtlebot3_ws
-python3 -m proj_wifi_heatmap_rl/train_dqn.py
-python3 -m proj_wifi_heatmap_rl/train_dqn.py --resume runs_dqn/dqn_ep0800.pt --more-episodes 200
-python3 -m proj_wifi_heatmap_rl/train_dqn.py --resume runs_dqn/dqn_ep0800.pt --total-episodes 1000
-python3 -m proj_wifi_heatmap_rl/train_dqn.py --resume runs_dqn/dqn_ep0800.pt --more-episodes 200 --reset-optim
+python3 -m proj_wifi_heatmap_rl.train_dqn
+python3 -m proj_wifi_heatmap_rl.train_dqn --resume runs_dqn/dqn_ep0800.pt --more-episodes 200
+python3 -m proj_wifi_heatmap_rl.train_dqn --resume runs_dqn/dqn_ep0800.pt --total-episodes 1000
+python3 -m proj_wifi_heatmap_rl.train_dqn --resume runs_dqn/dqn_ep0800.pt --more-episodes 200 --reset-optim
 ```
 
 ```bash
-python3 -m proj_wifi_heatmap_rl/test_dqn_policy.py \
-  --ckpt runs_dqn/dqn_ep0800.pt \
-  --episodes 1 \
-  --sleep 0.05
+python3 -m proj_wifi_heatmap_rl.test_dqn_policy --ckpt runs_dqn/dqn_ep0800.pt
+python3 -m proj_wifi_heatmap_rl.test_dqn_policy --ckpt runs_dqn/dqn_ep0800.pt --episodes 1 --sleep 0.05
 ```
