@@ -1,6 +1,7 @@
 from __future__ import annotations
 import time
 import threading
+from collections import deque
 from dataclasses import dataclass
 from typing import Optional, Dict, Any, Tuple
 
@@ -31,21 +32,35 @@ class RosCoverageConfig:
     warmup_steps: int = 8
 
     # 충돌 판정
-    collision_dist: float = 0.3
+    # collision_dist: float = 0.18
+    collision_dist: float = 0.15
+    near_dist: float = 0.35
+    very_near_dist: float = 0.25
 
     # coverage (odom 기반 방문 셀)
     cell_size: float = 0.25  # 25cm 그리드
-    reward_new_cell: float = 1.0
+    # reward_new_cell: float = 1.0
+    reward_new_cell: float = 2.0
     reward_revisit: float = 0.0
-    step_penalty: float = -0.01
-    collision_penalty: float = -10.0
+    reward_forward_after_turn: float = 0.05
+    penalty_step: float = -0.01
+    penalty_turn: float = -0.01
+    penalty_turn_streak: float = -0.1
+    penalty_standing: float = -0.03
+    penalty_near: float = -0.01
+    penalty_very_near: float = -0.04
+    penalty_collision: float = -10.0
 
     # 목표: 방문한 셀 개수(간단 버전)
     target_visited_cells: int = 250
 
     # cmd_vel 매핑
+    # v_forward: float = 0.18
+    # w_forward: float = 0.05
+    # w_turn: float = 0.9
     v_forward: float = 0.18
-    w_turn: float = 0.9
+    w_forward: float = 0.0
+    w_turn: float = 1.2
 
     # 토픽/서비스
     scan_topic: str = "/scan"
@@ -69,6 +84,16 @@ class RosCoverageEnv(gym.Env):
         super().__init__()
         self.cfg = cfg
         self._warmup_left = 0
+        self._turn_streak = 0
+        self._collision_streak = 0
+
+        # self._min_dist_hist = deque(maxlen=5)
+        # self._last_min_dist = float("inf")
+
+        self._prev_action = 3
+
+        # self._last_min_raw = float("inf")
+        # self._last_min_filt = float("inf")
 
         # obs 차원 = lidar_bins + 6
         obs_dim = self.cfg.lidar_bins + 6
@@ -142,6 +167,16 @@ class RosCoverageEnv(gym.Env):
         x, y, _ = self._get_pose()
         self._mark_visited(x, y)
 
+        self._prev_xy = self._get_pose()[:2]
+
+        self.new_cell = False
+        self.new_cells_this_ep = 0
+        self.collision = False
+        self.collision_this_ep = False
+
+        self.turn_count = 0
+        self.forward_count = 0
+
         obs = self._get_obs()
         info = self._get_info()
         return obs, info
@@ -153,12 +188,19 @@ class RosCoverageEnv(gym.Env):
         # 1) action -> cmd_vel
         if action == 0:      # forward
             v, w = self.cfg.v_forward, 0.0
+            self.forward_count += 1
+            self._turn_streak = 0
         elif action == 1:    # left
-            v, w = 0.05, self.cfg.w_turn
+            v, w = self.cfg.w_forward, self.cfg.w_turn
+            self.turn_count += 1
+            self._turn_streak += 1
         elif action == 2:    # right
-            v, w = 0.05, -self.cfg.w_turn
+            v, w = self.cfg.w_forward, -self.cfg.w_turn
+            self.turn_count += 1
+            self._turn_streak += 1
         elif action == 3:    # stop
             v, w = 0.0, 0.0
+            self._turn_streak = 0
         else:
             raise ValueError(f"Invalid action: {action}")
 
@@ -166,24 +208,74 @@ class RosCoverageEnv(gym.Env):
         self._hold_action(v, w, self.cfg.step_dt)
 
         # 3) 보상/종료 계산
-        reward = self.cfg.step_penalty
+        reward = self.cfg.penalty_step
+        # penalty_turn
+        if action in (1, 2):
+            reward += self.cfg.penalty_turn
+        # penalty_turn_streak
+        if self._turn_streak >= 8:
+            reward += self.cfg.penalty_turn_streak
+        # penalty_standing
+        x, y, _ = self._get_pose()
+        dx = x - self._prev_xy[0]
+        dy = y - self._prev_xy[1]
+        move = (dx*dx + dy*dy) ** 0.5
+        self._prev_xy = (x, y)
+        if move < 0.02:
+            reward += self.cfg.penalty_standing
+        # reward_forward_after_turn
+        prev_action = self._prev_action
+        self._prev_action = action
+        if prev_action in (1,2) and action == 0:
+            reward += self.cfg.reward_forward_after_turn
         done = False
 
         # 충돌 체크
+        # raw = self._min_lidar_dist()
+        # filt = self._min_lidar_dist_filtered()
+        # self._last_min_raw = float(raw) if raw is not None else float("inf")
+        # self._last_min_filt = float(filt) if filt is not None else float("inf")
+
+        self.collision = False
         if self._warmup_left > 0:
             self._warmup_left -= 1
+            self._collision_streak = 0
         else:
             # min_dist = self._min_lidar_dist()
             min_dist = self._min_lidar_dist_filtered()
+            # if min_dist is not None:
+            #     self._min_dist_hist.append(min_dist)
+            #     min_dist_5 = min(self._min_dist_hist)
+            # else:
+            #     min_dist_5 = None
+
+            # self._last_min_dist = min_dist_5 if min_dist_5 is not None else float("inf")
+            
+            if min_dist is not None:
+                if min_dist < self.cfg.very_near_dist:
+                    reward += self.cfg.penalty_very_near
+                elif min_dist < self.cfg.near_dist:
+                    reward += self.cfg.penalty_near
+
             if min_dist is not None and min_dist < self.cfg.collision_dist:
-                reward += self.cfg.collision_penalty
+            # if min_dist_5 is not None and min_dist_5 < self.cfg.collision_dist:
+                self._collision_streak += 1
+            else:
+                self._collision_streak = 0
+            if self._collision_streak >= 2:
+                reward += self.cfg.penalty_collision
+                self.collision = True
+                self.collision_this_ep = True
                 done = True
 
         # coverage 체크 (새 셀 방문 보상)
+        self.new_cell = False
         x, y, _ = self._get_pose()
         new_cell = self._mark_visited(x, y)
         if new_cell:
             reward += self.cfg.reward_new_cell
+            self.new_cell = True
+            self.new_cells_this_ep += 1
         else:
             reward += self.cfg.reward_revisit
 
@@ -201,10 +293,11 @@ class RosCoverageEnv(gym.Env):
         terminated = done
         truncated = False
 
-        if "gymnasium" in gym.__name__:
-            return obs, float(reward), terminated, truncated, info
-        else:
-            return obs, float(reward), done, info
+        # if "gymnasium" in gym.__name__:
+        #     return obs, float(reward), terminated, truncated, info
+        # else:
+        #     return obs, float(reward), done, info
+        return obs, float(reward), terminated, truncated, info
 
     # ---------------- helpers ----------------
     def _try_reset_sim(self):
@@ -227,12 +320,20 @@ class RosCoverageEnv(gym.Env):
                 return
 
     def _hold_action(self, v: float, w: float, duration: float):
+        self._scan_event.clear()
+        self._odom_event.clear()
         # Nav2 등 다른 퍼블리셔가 있어도 우리가 이기도록 짧은 주기로 계속 쏴줌
         t_end = time.time() + duration
         while time.time() < t_end:
             self._publish_twist(v, w)
             rclpy.spin_once(self.node, timeout_sec=0.02)
             time.sleep(0.02)
+        # ✅ 최소 한 번은 새 센서 들어오게 보장
+        t0 = time.time()
+        while time.time() - t0 < 0.2:
+            rclpy.spin_once(self.node, timeout_sec=0.02)
+            if self._scan_event.is_set() and self._odom_event.is_set():
+                break
 
     def _publish_twist(self, v: float, w: float):
         msg = Twist()
@@ -293,6 +394,7 @@ class RosCoverageEnv(gym.Env):
 
         # 너무 작은 값(튐) 제거
         r[(r < max(rmin, 0.02))] = np.inf
+        # r[(r < max(rmin, 0.01))] = np.inf
         r[(r > rmax)] = np.inf
 
         m = float(np.min(r))
@@ -337,10 +439,26 @@ class RosCoverageEnv(gym.Env):
 
     def _get_info(self) -> Dict[str, Any]:
         x, y, yaw = self._get_pose()
+
+        total_moves = self.turn_count + self.forward_count
+        turn_ratio = (
+            self.turn_count / total_moves
+            if total_moves > 0 else 0.0
+        )
+
         return {
             "step": self.step_count,
             "x": x, "y": y, "yaw": yaw,
             "visited_cells": len(self.visited_cells),
             "coverage_like": self._coverage_ratio_like(),
             "last_action": self._last_action,
+            "new_cell": self.new_cell,                       # 이번 step에서 새 셀?
+            "new_cells_this_ep": self.new_cells_this_ep, # 누적
+            "collision": self.collision,                     # 이번 step 충돌?
+            "collision_this_ep": self.collision_this_ep,
+            "turn_count": self.turn_count,
+            "forward_count": self.forward_count,
+            "turn_ratio": turn_ratio,
+            # "min_dist_raw": self._last_min_raw,
+            # "min_dist_filt": self._last_min_filt,
         }
