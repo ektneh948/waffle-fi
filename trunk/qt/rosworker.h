@@ -17,6 +17,7 @@
 
 #include <tf2_ros/buffer.h>
 #include <tf2_ros/transform_listener.h>
+#include <tf2/utils.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
 
 
@@ -48,6 +49,12 @@ private:
 
     rclcpp_action::Client<NavigateToPose>::SharedPtr nav_client_;
     std::shared_ptr<GoalHandleNav> active_goal_;
+    std::unique_ptr<tf2_ros::Buffer> tf_buffer_;
+    std::shared_ptr<tf2_ros::TransformListener> tf_listener_;
+    rclcpp::TimerBase::SharedPtr pose_timer_;
+
+    bool have_pose_ = false;
+    double last_x_ = 0.0, last_y_ = 0.0, last_yaw_ = 0.0;
 
 
     rclcpp::Node::SharedPtr node_;

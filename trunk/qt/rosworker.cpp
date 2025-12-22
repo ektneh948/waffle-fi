@@ -41,6 +41,31 @@ void RosWorker::run()
     node_ = std::make_shared<rclcpp::Node>("wifi_qt_node", opts);
     exec_.add_node(node_);
 
+    tf_buffer_ = std::make_unique<tf2_ros::Buffer>(node_->get_clock());
+    tf_listener_ = std::make_shared<tf2_ros::TransformListener>(*tf_buffer_, node_, false);
+
+    pose_timer_ = node_->create_wall_timer(
+        std::chrono::milliseconds(100),
+        [this]() {
+            try {
+                // 최신 TF (가장 최근 transform)
+                auto tf = tf_buffer_->lookupTransform("map", "base_link", tf2::TimePointZero);
+
+                const double x = tf.transform.translation.x;
+                const double y = tf.transform.translation.y;
+                const double yaw = tf2::getYaw(tf.transform.rotation);
+
+                last_x_ = x; last_y_ = y; last_yaw_ = yaw;
+                have_pose_ = true;
+
+                emit robotPose(x, y, yaw);
+
+            } catch (...) {
+            }
+        }
+        );
+
+
     emit statusChanged("Subscribing /amcl_pose (MVP dummy RSSI) ...");
 
     // 더미 RSSI 모델 파라미터
@@ -67,15 +92,31 @@ void RosWorker::run()
             double roll=0, pitch=0, yaw=0;
             tf2::Matrix3x3(q).getRPY(roll, pitch, yaw);
 
+            // ✅ AMCL covariance 기반 유효성 판단 (값이 크면 아직 수렴 전)
+            // covariance 배열에서 x,y,yaw 분산(대각 성분) 사용
+            const auto &C = msg->pose.covariance;
+            const double var_x   = C[0];   // xx
+            const double var_y   = C[7];   // yy
+            const double var_yaw = C[35];  // yawyaw
+
+            // 임계값은 환경마다 조절 가능 (처음엔 보수적으로)
+            const bool stable = (var_x < 0.25) && (var_y < 0.25) && (var_yaw < 0.5);
+
+            if (!stable) {
+                // 수렴 전에는 UI에 (0,0)같은 값이 찍히지 않도록 emit 안 함
+                return;
+            }
+
             // Dummy RSSI
             const double d = std::hypot(x - apX, y - apY);
             float rssi = static_cast<float>(-30.0 - 20.0 * std::log10(d + 1.0));
             rssi += noise(gen);
 
-            emit robotPose(x, y, yaw);         // 기존 표시용
-            emit sample(x, y, yaw, rssi);      // 히트맵용
+            emit robotPose(x, y, yaw);
+            emit sample(x, y, yaw, rssi);
         }
         );
+
 
     // nav2 액션 클라이언트 생성
     nav_client_ = rclcpp_action::create_client<NavigateToPose>(node_, "navigate_to_pose");

@@ -1,4 +1,4 @@
-QT += core gui widgets
+QT += core gui widgets sql
 CONFIG += c++17
 
 TEMPLATE = app
@@ -13,8 +13,15 @@ INCLUDEPATH += $$ROS_ROOT/include/action_msgs
 INCLUDEPATH += $$ROS_ROOT/include/unique_identifier_msgs
 INCLUDEPATH += $$ROS_ROOT/include/nav2_msgs
 INCLUDEPATH += $$PWD/3rdparty/QHeatMap/include
-SOURCES += $$PWD/3rdparty/QHeatMap/lib/*.cpp
+SOURCES += $$PWD/3rdparty/QHeatMap/lib/*.cpp \
+    autoexplorer.cpp \
+    dbmanager.cpp \
+    heatlayer.cpp
 HEADERS += $$PWD/3rdparty/QHeatMap/include/*.h \
+    AppState.h \
+    autoexplorer.h \
+    dbmanager.h \
+    heatlayer.h
 
 
 INCLUDEPATH += \
@@ -98,36 +105,15 @@ LIBS += \
     -lrclcpp_action \
     -lnav2_msgs__rosidl_typesupport_cpp \
     -laction_msgs__rosidl_typesupport_cpp
-
-# LIBS += \
-#     -L$$ROS_ROOT/lib \
-#     -lrclcpp \
-#     -lrcl \
-#     -ltf2_ros \
-#     -ltf2_geometry_msgs \
-#     -ltf2 \
-#     -ltf2_msgs \
-#     -lgeometry_msgs__rosidl_typesupport_cpp \
-#     -lstatistics_collector \
-#     -lrcutils \
-#     -lrmw \
-#     -lrcpputils \
-#     -ltracetools \
-#     -lament_index_cpp \
-#     -lrcl_yaml_param_parser \
-#     -lrosidl_runtime_c \
-#     -lrosidl_typesupport_c \
-#     -lrosidl_typesupport_cpp \
-#     -lrosidl_typesupport_introspection_c \
-#     -lrosidl_typesupport_introspection_cpp \
-#     -lrmw_fastrtps_cpp \
-#     -lrmw_fastrtps_shared_cpp \
-#     -lrosidl_typesupport_fastrtps_c \
-#     -lrosidl_typesupport_fastrtps_cpp \
-#     -lnav_msgs__rosidl_typesupport_cpp \
-#     -lstatistics_msgs__rosidl_typesupport_c \
-#     -lstatistics_msgs__rosidl_typesupport_cpp \
-#     -lstatistics_msgs__rosidl_typesupport_introspection_cpp
+LIBS += \
+    -L/opt/ros/humble/lib \
+    -ltf2_ros \
+    -ltf2 \
+    -ltf2_msgs__rosidl_typesupport_cpp \
+    -lrosidl_typesupport_cpp \
+    -lrosidl_typesupport_c \
+    -lrosidl_runtime_c \
+    -lrclcpp
 
 
 SOURCES += \
