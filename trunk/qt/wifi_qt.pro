@@ -16,12 +16,14 @@ INCLUDEPATH += $$PWD/3rdparty/QHeatMap/include
 SOURCES += $$PWD/3rdparty/QHeatMap/lib/*.cpp \
     autoexplorer.cpp \
     dbmanager.cpp \
-    heatlayer.cpp
+    heatlayer.cpp \
+    mainwindow2.cpp
 HEADERS += $$PWD/3rdparty/QHeatMap/include/*.h \
     AppState.h \
     autoexplorer.h \
     dbmanager.h \
-    heatlayer.h
+    heatlayer.h \
+    mainwindow2.h
 
 
 INCLUDEPATH += \
@@ -126,7 +128,8 @@ HEADERS += \
     rosworker.h
 
 FORMS += \
-    mainwindow.ui
+    mainwindow.ui \
+    mainwindow2.ui
 
 
 

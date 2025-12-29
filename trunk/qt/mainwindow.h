@@ -56,11 +56,13 @@ private slots:
     void onSampleToDb(double x, double y, double yaw, float rssi);
     void onSimEnable(bool on);
     void onSimParamsChanged();
-    void onClearPins();
-    void onModeChanged();
+    void onClearPins(); //지우기 버튼 빼자
+    void onModeChanged(); //
     void applyModeUi();
     void onMetricChanged(int index);
 
+
+    void on_btnSessionLoad_clicked();
 
 protected:
     void showEvent(QShowEvent* e) override;

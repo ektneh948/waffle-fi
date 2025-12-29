@@ -32,9 +32,9 @@ MainWindow::MainWindow(QWidget *parent)
     robotItem = scene->addEllipse(-5, -5, 10, 10, QPen(Qt::red), QBrush(Qt::red));
     robotItem->setZValue(10);
     robotItem->setFlag(QGraphicsItem::ItemIgnoresTransformations, true);
-    robotItem->setVisible(false);
+    robotItem->setVisible(true);
 
-    const QString yamlPath = "/home/ubuntu/map.yaml";
+    const QString yamlPath = "/home/ubuntu/ros2/maps/map_simul_world.yaml";
     if (!loadStaticMap(yamlPath)) {
         qDebug() << "Failed to load map yaml:" << yamlPath;
     } else {
@@ -263,6 +263,8 @@ bool MainWindow::meterToPixel(double x, double y, int& px, int& py) const
 
 void MainWindow::onRobotPose(double x, double y, double yaw)
 {
+
+    qDebug() << "[POSE]" << x << y << yaw;
     if (!mapReady_) return;
 
     int px=0, py=0;
@@ -621,7 +623,7 @@ void MainWindow::reloadQueryLayer(const QString& sessionId)
 
     }
     queryLayer_.flush();
-    queryLayer_.setVisible(ui->chkShowHeatmap->isChecked());
+    queryLayer_.setVisible(true);
 }
 float MainWindow::simRssiAt(double d_m) const
 {
@@ -782,7 +784,7 @@ void MainWindow::applyModeUi()
     const bool showHeat = ui->chkShowHeatmap->isChecked();
 
     if (currentMode_ == Mode::View || currentMode_ == Mode::Measurement) {
-        if (heatItem_) heatItem_->setVisible(showHeat);
+        if (heatItem_) heatItem_->setVisible(true);
         if (queryLayer_.isReady()) queryLayer_.setVisible(false);
         if (simLayer_.isReady())   simLayer_.setVisible(false);
     }
@@ -900,4 +902,8 @@ void MainWindow::applyLayersPolicy()
 }
 
 
+void MainWindow::on_btnSessionLoad_clicked()
+{
+
+}
 
