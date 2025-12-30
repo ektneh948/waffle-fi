@@ -64,7 +64,7 @@ MainWindow::MainWindow(QWidget *parent)
         });
     };
 
-    // (주의) tbMode는 UI에서 삭제/숨김 추천. 남아있으면 pageMode 대신 다른 페이지로 연결하거나 비활성.
+    // tbMode는 UI에서 삭제/숨김 추천. 남아있으면 pageMode 대신 다른 페이지로 연결하거나 비활성.
     if (ui->tbMode) {
         ui->tbMode->setVisible(false);  // Mode 버튼 제거 UX
         ui->tbMode->setEnabled(false);
@@ -102,8 +102,11 @@ MainWindow::MainWindow(QWidget *parent)
     }
 
     if (mapReady_) {
-        simLayer_.init(scene, mapImageSize_, /*z=*/7);
+        const double radius_m = 0.25; // 25cm
+        const int radius_px = qMax(1, int(std::round(radius_m / mapMeta_.resolution)));
+        simLayer_.init(scene, mapImageSize_, /*z=*/7, radius_px, /*opacity=*/160);
         simLayer_.setVisible(false);
+
     }
 
     initHeatmapLayer();
@@ -113,8 +116,10 @@ MainWindow::MainWindow(QWidget *parent)
     db_.initSchema();
 
     if (mapReady_) {
-        queryLayer_.init(scene, mapImageSize_, /*z=*/6); // heatItem_(z=5) 위에
-        queryLayer_.setVisible(false); // Load 전엔 숨김
+        const double radius_m = 0.25; // 25cm
+        const int radius_px = qMax(1, int(std::round(radius_m / mapMeta_.resolution)));
+        queryLayer_.init(scene, mapImageSize_, /*z=*/6, radius_px, /*opacity=*/160);
+        queryLayer_.setVisible(false);
     }
 
     rosThread = new RosWorker(this);
@@ -140,8 +145,60 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->btnSessionLoad,    &QPushButton::clicked, this, &MainWindow::onSessionLoad);
     connect(ui->btnSessionDelete,  &QPushButton::clicked, this, &MainWindow::onSessionDelete);
 
-    connect(ui->btnMeasureStart, &QPushButton::clicked, this, &MainWindow::onMeasureStart);
-    connect(ui->btnMeasureStop,  &QPushButton::clicked, this, &MainWindow::onMeasureStop);
+    //connect(ui->btnMeasureStart, &QPushButton::clicked, this, &MainWindow::onMeasureStart);
+    //connect(ui->btnMeasureStop,  &QPushButton::clicked, this, &MainWindow::onMeasureStop);
+//========================
+    // 1버튼 토글: checkable 쓰지 않음
+    ui->btnMeasureStart->setCheckable(false);
+    ui->btnMeasureStart->setText("Start");
+
+    // Stop 버튼은 제거/숨김(1버튼만 사용)
+    if (ui->btnMeasureStop) {
+        ui->btnMeasureStop->setVisible(false);
+        ui->btnMeasureStop->setEnabled(false);
+    }
+
+    connect(ui->btnMeasureStart, &QPushButton::clicked, this, [this]() {
+        if (!measuringDb_) onMeasureStart();
+        else               onMeasureStop();
+
+        // ✅ 텍스트/상태 동기화는 updateUiByContext가 책임지게
+        updateUiByContext();
+
+        // ✅ 눌림/포커스 잔상 제거 (다음 이벤트 루프에서)
+        QTimer::singleShot(0, this, [this]{
+            ui->btnMeasureStart->setDown(false);
+            ui->btnMeasureStart->clearFocus();
+            ui->btnMeasureStart->repaint();
+        });
+    });
+
+
+    // connect(ui->btnMeasureStart, &QPushButton::clicked, this, [this]() {
+    //     if (!measuringDb_) {
+    //         onMeasureStart();                 // DB 저장 시작 + 세션 생성
+    //     } else {
+    //         onMeasureStop();                  // DB 저장 종료
+    //     }
+
+    //     // 클릭 후 눌림 잔상 제거(테마/스타일에 따라 필요)
+    //     ui->btnMeasureStart->setDown(false);
+    //     ui->btnMeasureStart->setChecked(false);
+    //     ui->btnMeasureStart->clearFocus();
+
+    //     // 텍스트 동기화
+    //     ui->btnMeasureStart->setText(measuringDb_ ? "Stop" : "Start");
+    // });
+
+    if (ui->btnMeasureStart) {
+        ui->btnMeasureStart->setEnabled(true);
+        ui->btnMeasureStart->setText(measuringDb_ ? "Stop" : "Start");
+    }
+    if (ui->btnMeasureStop) {
+        ui->btnMeasureStop->setVisible(false);
+    }
+
+//========================
 
     connect(ui->btnApplyFilter, &QPushButton::clicked, this, &MainWindow::onApplyFilter);
 
@@ -168,6 +225,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     // 최종 UI/레이어 정책은 컨텍스트 기반으로 단일 진입점
     updateUiByContext();
+    initLegendOverlay();
 }
 
 MainWindow::~MainWindow()
@@ -224,9 +282,17 @@ void MainWindow::updateUiByContext()
 
     // Measure: 항상 접근 가능, 상태에 따라 Start/Stop enable만 변경
     if (ui->gbMeasure) ui->gbMeasure->setEnabled(true);
-    if (ui->btnMeasureStart) ui->btnMeasureStart->setEnabled(!measuringDb_);
-    if (ui->btnMeasureStop)  ui->btnMeasureStop->setEnabled(measuringDb_);
+    // if (ui->btnMeasureStart) ui->btnMeasureStart->setEnabled(!measuringDb_);
+    // if (ui->btnMeasureStop)  ui->btnMeasureStop->setEnabled(measuringDb_);
+    if (ui->btnMeasureStart) {
+        ui->btnMeasureStart->setEnabled(true);
+        ui->btnMeasureStart->setText(measuringDb_ ? "Stop" : "Start");
+    }
 
+    if (ui->btnMeasureStop) {
+        ui->btnMeasureStop->setEnabled(false);
+        ui->btnMeasureStop->setVisible(false);
+    }
     // Session/Filter: 항상 접근 가능
     if (ui->gbSession) ui->gbSession->setEnabled(true);
     if (ui->gbFilter)  ui->gbFilter->setEnabled(true);
@@ -316,6 +382,7 @@ void MainWindow::resizeEvent(QResizeEvent* event)
 {
     QMainWindow::resizeEvent(event);
     applyViewTransform();
+    updateLegendOverlayGeometry();   // ✅ 추가
 }
 
 void MainWindow::showEvent(QShowEvent* e)
@@ -323,8 +390,10 @@ void MainWindow::showEvent(QShowEvent* e)
     QMainWindow::showEvent(e);
     QTimer::singleShot(0, this, [this]{
         applyViewTransform();
+        updateLegendOverlayGeometry(); // ✅ 추가
     });
 }
+
 
 void MainWindow::applyViewTransform()
 {
@@ -353,6 +422,7 @@ void MainWindow::applyViewTransform()
     v->setTransform(t, false);
 
     v->centerOn(scene->sceneRect().center());
+    updateLegendOverlayGeometry();
 }
 
 bool MainWindow::meterToPixel(double x, double y, int& px, int& py) const
@@ -419,8 +489,20 @@ void MainWindow::initHeatmapLayer()
     palette_->setColorAt(0.5, QColor(255, 255, 0));
     palette_->setColorAt(1.0, QColor(0, 255, 0));
 
+    // ===== 25cm 반경 설정 =====
+    const double radius_m = 0.25; // 25cm
+    const int radius_px = qMax(1, int(std::round(radius_m / mapMeta_.resolution)));
+    const int opacity = 160;
+    const bool absoluteMode = true;
+    const bool cap01 = true;
+
     delete heatMapper_;
-    heatMapper_ = new HeatMapper(&heatCanvas_, palette_, /*radius=*/18, /*opacity=*/160);
+    heatMapper_ = new HeatMapper(&heatCanvas_, palette_, radius_px, 160,
+                                 /*absoluteMode=*/true,
+                                 /*cap01=*/true,
+                                 /*useSaturCurve=*/true,
+                                 /*saturK=*/1.5);
+
 
     if (!heatItem_) {
         heatItem_ = scene->addPixmap(QPixmap::fromImage(heatCanvas_));
@@ -436,6 +518,7 @@ void MainWindow::initHeatmapLayer()
         heatFlushTimer_->start(100);
     }
 }
+
 
 float MainWindow::rssiToIntensity01(float rssi) const
 {
@@ -661,6 +744,8 @@ void MainWindow::onSessionDelete()
 //======================
 void MainWindow::onMeasureStart()
 {
+    if (measuringDb_) return;
+
     const QString sid = db_.beginSession();
     if (sid.isEmpty()) {
         statusBar()->showMessage("Measure Start failed: cannot create session");
@@ -672,7 +757,7 @@ void MainWindow::onMeasureStart()
 
     onSessionRefresh();
 
-    // 방금 만든 세션을 콤보에서 선택
+    // 방금 만든 세션 선택
     for (int i=0; i<ui->cbSessionId->count(); ++i) {
         if (ui->cbSessionId->itemData(i).toString() == sid) {
             ui->cbSessionId->setCurrentIndex(i);
@@ -685,12 +770,14 @@ void MainWindow::onMeasureStart()
 
 void MainWindow::onMeasureStop()
 {
+    if (!measuringDb_) return;
+
     measuringDb_ = false;
     db_.endSession(activeSessionId_);
+    activeSessionId_.clear();
 
     updateUiByContext();
 }
-
 //======================
 // Filter
 //======================
@@ -726,7 +813,12 @@ void MainWindow::onSampleToDb(double x, double y, double /*yaw*/, float rssi)
 void MainWindow::reloadQueryLayer(const QString& sessionId)
 {
     if (!mapReady_) return;
-    if (!queryLayer_.isReady()) queryLayer_.init(scene, mapImageSize_, 6);
+    if (!queryLayer_.isReady()) {
+        const double radius_m = 0.25; // 25cm
+        const int radius_px = qMax(1, int(std::round(radius_m / mapMeta_.resolution)));
+        queryLayer_.init(scene, mapImageSize_, 6, radius_px, 160);
+    }
+
 
     const auto rows = db_.loadSamples(sessionId, filterSsid_, filterThrEnable_, filterThrRssi_);
 
@@ -778,7 +870,11 @@ void MainWindow::addSimPinAt(double x_m, double y_m)
 void MainWindow::rebuildSimLayer()
 {
     if (!mapReady_) return;
-    if (!simLayer_.isReady()) simLayer_.init(scene, mapImageSize_, 7);
+    if (!simLayer_.isReady()) {
+        const double radius_m = 0.25; // 25cm
+        const int radius_px = qMax(1, int(std::round(radius_m / mapMeta_.resolution)));
+        simLayer_.init(scene, mapImageSize_, 7, radius_px, 160);
+    }
 
     simLayer_.clear();
 
@@ -954,5 +1050,43 @@ void MainWindow::onLayerHeatmap(bool /*on*/)
     // Mode 버튼 제거 후에는
     // 히트맵 on/off는 컨텍스트 정책으로 통합
     updateUiByContext();
+}
+
+void MainWindow::initLegendOverlay()
+{
+    if (!ui->graphicsView) return;
+    if (legendOverlay_) return;
+
+    // ✅ graphicsView의 viewport 위에 직접 올리면 오버레이처럼 동작
+    legendOverlay_ = new LegendBarWidget(ui->graphicsView->viewport());
+    legendOverlay_->setRangeDbm(-80, 0);
+    legendOverlay_->setTitle("Voice + Data | dBm");
+    legendOverlay_->setValueDbm(-67);
+
+    // 보기 좋게 테두리/배경이 필요하면(선택)
+    legendOverlay_->setAttribute(Qt::WA_TransparentForMouseEvents, true); // 클릭을 맵에 통과
+    legendOverlay_->setStyleSheet("background: transparent;");           // 위젯 자체 배경은 paintEvent가 그림
+
+    // 크기(첨부 이미지 느낌)
+    legendOverlay_->setFixedSize(360, 64);
+
+    updateLegendOverlayGeometry();
+    legendOverlay_->show();
+}
+
+void MainWindow::updateLegendOverlayGeometry()
+{
+    if (!legendOverlay_ || !ui->graphicsView) return;
+
+    const int margin = 12; // 우하단 여백
+    const QRect vp = ui->graphicsView->viewport()->rect();
+
+    const int w = legendOverlay_->width();
+    const int h = legendOverlay_->height();
+
+    const int x = vp.right() - w - margin;
+    const int y = vp.bottom() - h - margin;
+
+    legendOverlay_->move(x, y);
 }
 

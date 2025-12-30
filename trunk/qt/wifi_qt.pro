@@ -17,13 +17,13 @@ SOURCES += $$PWD/3rdparty/QHeatMap/lib/*.cpp \
     autoexplorer.cpp \
     dbmanager.cpp \
     heatlayer.cpp \
-    mainwindow2.cpp
+    legendbarwidget.cpp
 HEADERS += $$PWD/3rdparty/QHeatMap/include/*.h \
     AppState.h \
     autoexplorer.h \
     dbmanager.h \
     heatlayer.h \
-    mainwindow2.h
+    legendbarwidget.h
 
 
 INCLUDEPATH += \
@@ -128,8 +128,7 @@ HEADERS += \
     rosworker.h
 
 FORMS += \
-    mainwindow.ui \
-    mainwindow2.ui
+    mainwindow.ui
 
 
 

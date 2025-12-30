@@ -10,7 +10,10 @@ class HeatLayer {
 public:
     ~HeatLayer();
 
-    bool init(QGraphicsScene* scene, const QSize& size, int z);
+    // radius_px, opacity를 외부에서 받도록 확장
+    bool init(QGraphicsScene* scene, const QSize& size, int z,
+              int radius_px, int opacity);
+
     void clear();
     void addPoint(int px, int py, float intensity01);
     void flush();

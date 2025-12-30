@@ -15,6 +15,7 @@
 #include "autoexplorer.h"
 #include "dbmanager.h"
 #include "heatlayer.h"
+#include "legendbarwidget.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -153,6 +154,9 @@ private:
     HeatMapper* heatMapper_ = nullptr;
     QGraphicsPixmapItem* heatItem_ = nullptr;
     QTimer* heatFlushTimer_ = nullptr;
+    LegendBarWidget* legendOverlay_ = nullptr;
+    void initLegendOverlay();
+    void updateLegendOverlayGeometry();
 };
 
 #endif
