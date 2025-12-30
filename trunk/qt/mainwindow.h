@@ -16,7 +16,6 @@
 #include "dbmanager.h"
 #include "heatlayer.h"
 
-
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
@@ -37,6 +36,10 @@ public:
     explicit MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 
+    // ✅ 컨텍스트 기반 모드(Mode 버튼 제거 핵심) - public으로 올려도 되고 private이어도 되지만
+    //    cpp/시그니처 꼬임 방지 위해 public이 가장 안전
+    enum class Mode { View, Measurement, Query, SimAP };
+
 private slots:
     void onApplyFilter();
     void onRosStatus(const QString &msg);
@@ -56,13 +59,14 @@ private slots:
     void onSampleToDb(double x, double y, double yaw, float rssi);
     void onSimEnable(bool on);
     void onSimParamsChanged();
-    void onClearPins(); //지우기 버튼 빼자
-    void onModeChanged(); //
-    void applyModeUi();
+    void onClearPins();
     void onMetricChanged(int index);
 
-
     void on_btnSessionLoad_clicked();
+
+    // ❌ Mode 버튼 제거 시 더 이상 쓰지 않음(남겨도 되지만 연결은 제거 권장)
+    // void onModeChanged();
+    // void applyModeUi();
 
 protected:
     void showEvent(QShowEvent* e) override;
@@ -70,6 +74,10 @@ protected:
     bool eventFilter(QObject* obj, QEvent* ev) override;
 
 private:
+    // ✅ Mode 버튼 제거 후: 모드를 자동으로 계산 + UI/레이어 갱신 단일 진입점
+    Mode deriveModeFromContext() const;
+    void updateUiByContext();
+
     void applyLayersPolicy();
     void reloadQueryLayer(const QString& sessionId);
     bool loadStaticMap(const QString& yamlPath);
@@ -88,18 +96,18 @@ private:
     void onAutoGoal(double x, double y, double yaw);
     void addSimPinAt(double x_m, double y_m);
     void rebuildSimLayer();
-    float simRssiAt(double d_m) const;      // 거리→RSSI(dBm)
-    float simIntensityAt(double d_m) const; // 거리→intensity(0..1)
-    float valueToIntensity01(const SampleRow& s) const; // DB/query용
-    float simValueToIntensity01(double d_m) const;      // sim용
-
-
+    float simRssiAt(double d_m) const;
+    float simIntensityAt(double d_m) const;
+    float valueToIntensity01(const SampleRow& s) const;
+    float simValueToIntensity01(double d_m) const;
 
 private:
     enum class Metric { RSSI, SNR, ApCount, Noise, ThroughputMax };
     Metric currentMetric_ = Metric::RSSI;
-    enum class Mode { View, Measurement, Query, SimAP };
+
+    // ✅ Mode는 이제 컨텍스트로 자동 갱신됨
     Mode currentMode_ = Mode::View;
+
     bool simEnabled_ = false;
     double simTxPower_ = -40.0;
     int simChannel_ = 36;
@@ -115,15 +123,19 @@ private:
     QString filterSsid_ = "ALL";
     bool filterThrEnable_ = false;
     int filterThrRssi_ = -60;
+
     bool measuringDb_ = false;
     QString activeSessionId_;
+
     DbManager db_;
     HeatLayer queryLayer_;
-    QString currentLoadedSession_; // state 구조 안 쓰면 이것만으로도 OK
+    QString currentLoadedSession_;
 
     bool navBusy_ = false;
     QVector<QGraphicsItem*> apPins_;
+
     AutoExplorer autoExplorer_;
+
     Ui::MainWindow *ui = nullptr;
     RosWorker *rosThread = nullptr;
 

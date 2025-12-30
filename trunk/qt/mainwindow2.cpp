@@ -68,7 +68,9 @@ MainWindow2::MainWindow2(QWidget *parent)
     connect(ui->pBt_ViewMode,  &QPushButton::clicked, this, &MainWindow2::on_pBt_ViewMode_clicked);
     connect(ui->pBt_SimulMode, &QPushButton::clicked, this, &MainWindow2::on_pBt_SimulMode_clicked);
 
-    connect(ui->pBt_Start, &QPushButton::clicked, this, &MainWindow2::on_pBt_Start_clicked);
+    //connect(ui->pBt_Start, &QPushButton::clicked, this, &MainWindow2::on_pBt_Start_clicked);
+    connect(ui->pBt_Start, &QPushButton::toggled,
+            this, &MainWindow2::on_pBt_Start_clicked);
 
     connect(ui->pBt_DB_Refresh, &QPushButton::clicked, this, &MainWindow2::on_pBt_DB_Refresh_clicked);
     connect(ui->pBt_DB_Load,    &QPushButton::clicked, this, &MainWindow2::on_pBt_DB_Load_clicked);
@@ -165,6 +167,7 @@ void MainWindow2::on_pBt_Start_clicked(bool checked)
 
 void MainWindow2::on_pBt_DB_Refresh_clicked()
 {
+    if (measuringDb_) return;
     onSessionRefresh();
 }
 
@@ -306,7 +309,6 @@ void MainWindow2::onMeasureStart()
     const QString sid = db_.beginSession();
     if (sid.isEmpty()) {
         statusBar()->showMessage("Measure Start failed: cannot create session");
-        // 버튼 상태 복구
         ui->pBt_Start->setChecked(false);
         ui->pBt_Start->setText("Start");
         return;
@@ -317,22 +319,18 @@ void MainWindow2::onMeasureStart()
 
     statusBar()->showMessage("Measure Start: session=" + sid);
 
-    // 세션 목록 갱신 및 방금 세션 선택
-    onSessionRefresh();
-
-    for (int i=0; i<ui->pComboBox_Session->count(); ++i) {
-        if (ui->pComboBox_Session->itemData(i).toString() == sid) {
-            ui->pComboBox_Session->setCurrentIndex(i);
-            break;
-        }
-    }
+    ui->pComboBox_Session->blockSignals(true);
+    ui->pComboBox_Session->clear();
+    ui->pComboBox_Session->addItem(sid, sid);
+    ui->pComboBox_Session->setCurrentIndex(0);
+    ui->pComboBox_Session->blockSignals(false);
 }
 
 void MainWindow2::onMeasureStop()
 {
     measuringDb_ = false;
     if (!activeSessionId_.isEmpty()) {
-        db_.endSession(activeSessionId_);
+        //db_.endSession(activeSessionId_);
         statusBar()->showMessage("Measure Stop: session=" + activeSessionId_);
     } else {
         statusBar()->showMessage("Measure Stop");
@@ -813,37 +811,6 @@ bool MainWindow2::eventFilter(QObject* obj, QEvent* ev)
     return QMainWindow::eventFilter(obj, ev);
 }
 
-
-// bool MainWindow2::eventFilter(QObject* obj, QEvent* ev)
-// {
-//     if (obj == ui->graphicsView->viewport() &&
-//         ev->type() == QEvent::MouseButtonPress) {
-
-//         auto* me = static_cast<QMouseEvent*>(ev);
-//         const QPointF scenePos = ui->graphicsView->mapToScene(me->pos());
-
-//         // Sim 모드에서는 핀 추가 제스처 지원
-//         const bool simEnabled = (currentMode_ == Mode::SimAP) && simEnabled_;
-//         const bool simGesture = (me->button() == Qt::RightButton) ||
-//                                 (me->button() == Qt::LeftButton && (me->modifiers() & Qt::ShiftModifier));
-
-//         if (simEnabled && simGesture) {
-//             int px=0, py=0;
-//             if (!sceneToMapPixel(scenePos, px, py)) return true;
-
-//             double x_m=0.0, y_m=0.0;
-//             if (!pixelToMap(px, py, x_m, y_m)) return true;
-
-//             addSimPinAt(x_m, y_m);
-//             return true;
-//         }
-
-//         // 일반 클릭: 목표 이동
-//         onMapClicked(scenePos);
-//         return true;
-//     }
-//     return false;
-// }
 
 void MainWindow2::onSimEnable(bool on)
 {

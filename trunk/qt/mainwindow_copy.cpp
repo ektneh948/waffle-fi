@@ -12,10 +12,8 @@
 #include <QResizeEvent>
 #include <QMouseEvent>
 #include <QShowEvent>
-#include <QTimer>
-#include <QDateTime>
 
-    static inline double rad2deg(double r) { return r * 180.0 / M_PI; }
+static inline double rad2deg(double r) { return r * 180.0 / M_PI; }
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -23,64 +21,6 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);
 
-    //======================12-29============================
-    ui->leftPanel->setVisible(false);                 // 디폴트: 왼쪽 패널 숨김
-    ui->leftStack->setCurrentWidget(ui->pageSession); // 기본 페이지(숨겨져 있어도 OK)
-
-    auto showPanel = [&](QWidget* page) {
-        ui->leftPanel->setVisible(true);
-        ui->leftStack->setCurrentWidget(page);
-    };
-
-    auto hidePanel = [&]() {
-        ui->leftPanel->setVisible(false);
-    };
-
-    // 탭 버튼 초기 설정 (Mode 탭은 UI에서 제거/숨김을 권장)
-    auto initTab = [&](QToolButton* tabBtn, QWidget* pageWidget) {
-        if (!tabBtn || !pageWidget) return;
-
-        tabBtn->setCheckable(true);
-        tabBtn->setAutoExclusive(false);
-
-        connect(tabBtn, &QToolButton::clicked, this, [=]() {
-            bool panelVisible = ui->leftPanel->isVisible();
-            bool samePage = (ui->leftStack->currentWidget() == pageWidget);
-
-            if (panelVisible && samePage) {
-                hidePanel();
-                tabBtn->setChecked(false);
-                return;
-            }
-
-            showPanel(pageWidget);
-
-            // 수동 exclusive
-            if (ui->tbMode)    ui->tbMode->setChecked(tabBtn == ui->tbMode);
-            if (ui->tbSession) ui->tbSession->setChecked(tabBtn == ui->tbSession);
-            if (ui->tbSim)     ui->tbSim->setChecked(tabBtn == ui->tbSim);
-            if (ui->tbMetric)  ui->tbMetric->setChecked(tabBtn == ui->tbMetric);
-            if (ui->tbLayers)  ui->tbLayers->setChecked(tabBtn == ui->tbLayers);
-        });
-    };
-
-    // (주의) tbMode는 UI에서 삭제/숨김 추천. 남아있으면 pageMode 대신 다른 페이지로 연결하거나 비활성.
-    if (ui->tbMode) {
-        ui->tbMode->setVisible(false);  // Mode 버튼 제거 UX
-        ui->tbMode->setEnabled(false);
-        ui->tbMode->setChecked(false);
-    }
-
-    initTab(ui->tbSession, ui->pageSession);
-    initTab(ui->tbSim,     ui->pageSim);
-    initTab(ui->tbMetric,  ui->pageMetric);
-    initTab(ui->tbLayers,  ui->pageLayers);
-
-    if (ui->tbSession) ui->tbSession->setChecked(false);
-    if (ui->tbSim)     ui->tbSim->setChecked(false);
-    if (ui->tbMetric)  ui->tbMetric->setChecked(false);
-    if (ui->tbLayers)  ui->tbLayers->setChecked(false);
-    //=======================================================
 
     scene = new QGraphicsScene(this);
     ui->graphicsView->setScene(scene);
@@ -94,7 +34,10 @@ MainWindow::MainWindow(QWidget *parent)
     robotItem->setFlag(QGraphicsItem::ItemIgnoresTransformations, true);
     robotItem->setVisible(true);
 
-    const QString yamlPath = "/home/ubuntu/ros2/maps/map_simul_world.yaml";
+    //const QString yamlPath = "/home/ubuntu/ros2/maps/map_simul_world.yaml";
+    const QString yamlPath ="/home/ubuntu/intel-edge-ai-sw-8/2601_4th_proj_dahyeon/docs/maps/map.yaml";
+
+
     if (!loadStaticMap(yamlPath)) {
         qDebug() << "Failed to load map yaml:" << yamlPath;
     } else {
@@ -105,6 +48,7 @@ MainWindow::MainWindow(QWidget *parent)
         simLayer_.init(scene, mapImageSize_, /*z=*/7);
         simLayer_.setVisible(false);
     }
+
 
     initHeatmapLayer();
 
@@ -124,50 +68,48 @@ MainWindow::MainWindow(QWidget *parent)
     connect(rosThread, &RosWorker::sample, this, &MainWindow::onSampleToDb);
     rosThread->start();
 
-    // Layers
-    connect(ui->chkShowHeatmap, &QCheckBox::toggled, this, [this](bool){
-        updateUiByContext();
-    });
-    connect(ui->chkShowRobot, &QCheckBox::toggled, this, &MainWindow::onLayerRobot);
-    connect(ui->chkShowApPins, &QCheckBox::toggled, this, &MainWindow::onLayerPins);
+    connect(ui->chkShowHeatmap, &QCheckBox::toggled,
+            this, &MainWindow::onLayerHeatmap);
 
-    // AutoExplore
+    connect(ui->chkShowRobot, &QCheckBox::toggled,
+            this, &MainWindow::onLayerRobot);
+
+    connect(ui->chkShowApPins, &QCheckBox::toggled,
+            this, &MainWindow::onLayerPins);
+
+    // AutoExplore checkbox
     connect(ui->chkAutoExplore, &QCheckBox::toggled,
             this, &MainWindow::onAutoExploreToggled);
 
-    // Session / Measure / Filter
     connect(ui->btnSessionRefresh, &QPushButton::clicked, this, &MainWindow::onSessionRefresh);
     connect(ui->btnSessionLoad,    &QPushButton::clicked, this, &MainWindow::onSessionLoad);
     connect(ui->btnSessionDelete,  &QPushButton::clicked, this, &MainWindow::onSessionDelete);
-
     connect(ui->btnMeasureStart, &QPushButton::clicked, this, &MainWindow::onMeasureStart);
     connect(ui->btnMeasureStop,  &QPushButton::clicked, this, &MainWindow::onMeasureStop);
-
-    connect(ui->btnApplyFilter, &QPushButton::clicked, this, &MainWindow::onApplyFilter);
-
-    // Sim
+    connect(ui->btnApplyFilter, &QPushButton::clicked,
+            this, &MainWindow::onApplyFilter);
     connect(ui->chkSimEnable, &QCheckBox::toggled, this, &MainWindow::onSimEnable);
     connect(ui->spTxPower, QOverload<double>::of(&QDoubleSpinBox::valueChanged), this, &MainWindow::onSimParamsChanged);
     connect(ui->spSimChannel, QOverload<int>::of(&QSpinBox::valueChanged), this, &MainWindow::onSimParamsChanged);
     connect(ui->cbSimBandwidth, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &MainWindow::onSimParamsChanged);
     connect(ui->btnClearPins, &QPushButton::clicked, this, &MainWindow::onClearPins);
-
-    // Metric
+    connect(ui->rbModeView,    &QRadioButton::toggled, this, &MainWindow::onModeChanged);
+    connect(ui->rbModeMeasure, &QRadioButton::toggled, this, &MainWindow::onModeChanged);
+    connect(ui->rbModeQuery,   &QRadioButton::toggled, this, &MainWindow::onModeChanged);
+    connect(ui->rbModeSim,     &QRadioButton::toggled, this, &MainWindow::onModeChanged);
     connect(ui->cbMetric, QOverload<int>::of(&QComboBox::currentIndexChanged),
             this, &MainWindow::onMetricChanged);
 
-    // AutoExplorer integration
+    onMetricChanged(ui->cbMetric->currentIndex());
+
+    onSessionRefresh();
+    applyLayersPolicy();
+
     connect(rosThread, &RosWorker::goalStatus,
             &autoExplorer_, &AutoExplorer::onGoalStatus);
     connect(&autoExplorer_, &AutoExplorer::newGoal,
             this, &MainWindow::onAutoGoal);
 
-    // init
-    onMetricChanged(ui->cbMetric->currentIndex());
-    onSessionRefresh();
-
-    // 최종 UI/레이어 정책은 컨텍스트 기반으로 단일 진입점
-    updateUiByContext();
 }
 
 MainWindow::~MainWindow()
@@ -192,69 +134,6 @@ MainWindow::~MainWindow()
 void MainWindow::onRosStatus(const QString &msg)
 {
     qDebug() << msg;
-}
-
-//======================
-// 컨텍스트 기반 Mode 결정 (Mode 버튼 제거 핵심)
-//======================
-MainWindow::Mode MainWindow::deriveModeFromContext() const
-{
-    // Sim이 클릭 의미를 바꾸므로 최우선
-    if (ui->chkSimEnable->isChecked())
-        return Mode::SimAP;
-
-    // 세션이 로드되어 있으면 Query 컨텍스트
-    if (!currentLoadedSession_.isEmpty())
-        return Mode::Query;
-
-    // 측정 중이면 Measurement
-    if (measuringDb_)
-        return Mode::Measurement;
-
-    // 기본 View
-    return Mode::View;
-}
-
-//======================
-// UI/레이어/상태를 단일 진입점으로 갱신
-//======================
-void MainWindow::updateUiByContext()
-{
-    currentMode_ = deriveModeFromContext();
-
-    // Measure: 항상 접근 가능, 상태에 따라 Start/Stop enable만 변경
-    if (ui->gbMeasure) ui->gbMeasure->setEnabled(true);
-    if (ui->btnMeasureStart) ui->btnMeasureStart->setEnabled(!measuringDb_);
-    if (ui->btnMeasureStop)  ui->btnMeasureStop->setEnabled(measuringDb_);
-
-    // Session/Filter: 항상 접근 가능
-    if (ui->gbSession) ui->gbSession->setEnabled(true);
-    if (ui->gbFilter)  ui->gbFilter->setEnabled(true);
-
-    // Sim: Sim Enable ON일 때만 파라미터 조작 가능
-    simEnabled_ = ui->chkSimEnable->isChecked();
-    if (ui->gbSim) ui->gbSim->setEnabled(simEnabled_);
-
-    // Metric: 항상 선택 가능
-    if (ui->gbMetric) ui->gbMetric->setEnabled(true);
-
-    // 로봇 표시
-    if (robotItem)
-        robotItem->setVisible(ui->chkShowRobot->isChecked() && poseReady_);
-
-    // 레이어 정책 반영(겹침 방지 + 우선순위)
-    applyLayersPolicy();
-
-    // 상태바 안내(선택)
-    if (simEnabled_) {
-        statusBar()->showMessage("Sim: Shift+Click or Right Click to drop AP pins");
-    } else if (!currentLoadedSession_.isEmpty()) {
-        statusBar()->showMessage("Query: loaded session. Filter/Metric changes apply.");
-    } else if (measuringDb_) {
-        statusBar()->showMessage("Measuring: samples are being stored.");
-    } else {
-        statusBar()->showMessage("View: live heatmap.");
-    }
 }
 
 bool MainWindow::loadStaticMap(const QString &yamlPath)
@@ -340,7 +219,6 @@ void MainWindow::applyViewTransform()
     v->setRenderHint(QPainter::SmoothPixmapTransform, true);
     v->resetTransform();
 
-    // 기존과 동일한 회전/fit 정책 유지
     QTransform rot;
     rot.rotate(-90.0);
     v->setTransform(rot, true);
@@ -388,6 +266,7 @@ bool MainWindow::meterToPixel(double x, double y, int& px, int& py) const
 
 void MainWindow::onRobotPose(double x, double y, double yaw)
 {
+
     qDebug() << "[POSE]" << x << y << yaw;
     if (!mapReady_) return;
 
@@ -399,7 +278,7 @@ void MainWindow::onRobotPose(double x, double y, double yaw)
 
     if (!poseReady_) {
         poseReady_ = true;
-        robotItem->setVisible(ui->chkShowRobot->isChecked() && poseReady_);
+        robotItem->setVisible(true);
     }
 }
 
@@ -490,12 +369,11 @@ bool MainWindow::eventFilter(QObject* obj, QEvent* ev)
         auto* me = static_cast<QMouseEvent*>(ev);
         const QPointF scenePos = ui->graphicsView->mapToScene(me->pos());
 
-        // Mode 버튼 제거 후: Sim은 chkSimEnable 하나로 컨텍스트 결정
-        const bool simCtx = ui->chkSimEnable->isChecked();
+        const bool simEnabled = (currentMode_ == Mode::SimAP) && simEnabled_;
         const bool simGesture = (me->button() == Qt::RightButton) ||
                                 (me->button() == Qt::LeftButton && (me->modifiers() & Qt::ShiftModifier));
 
-        if (simCtx && simGesture) {
+        if (simEnabled && simGesture) {
             int px=0, py=0;
             if (!sceneToMapPixel(scenePos, px, py)) return true;
 
@@ -505,13 +383,12 @@ bool MainWindow::eventFilter(QObject* obj, QEvent* ev)
             addSimPinAt(x_m, y_m);
             return true;
         }
-
-        // 기본 동작: Navigate
         onMapClicked(scenePos);
         return true;
     }
     return false;
 }
+
 
 void MainWindow::onMapClicked(const QPointF& scenePos)
 {
@@ -562,11 +439,18 @@ bool MainWindow::pixelToMap(int px, int py, double& x_m, double& y_m) const
     return true;
 }
 
-//======================
-// Layer toggles
-//======================
-void MainWindow::onLayerRobot(bool /*on*/)
+
+void MainWindow::onLayerHeatmap(bool on)
 {
+    // // 기존 실시간 heatmap (절대 수정 금지)
+    // if (heatItem_)
+    //     heatItem_->setVisible(on);
+    applyLayersPolicy();
+}
+
+void MainWindow::onLayerRobot(bool on)
+{
+    // poseReady_ == false면 아직 안 보이게 유지
     if (robotItem)
         robotItem->setVisible(ui->chkShowRobot->isChecked() && poseReady_);
 }
@@ -578,12 +462,13 @@ void MainWindow::onLayerPins(bool on)
     }
 }
 
-//======================
-// AutoExplore (강화확습으로 대체)
-//======================
+
 void MainWindow::onAutoExploreToggled(bool on)
 {
+    // 지도 bounds: 최소 MVP는 하드코딩(환경에 맞게 나중에 조정)
+    // map_simul_world 기준 대략 범위를 모르면 일단 작은 범위로 시작해서 튜닝
     autoExplorer_.setMapBounds(-3.0, 3.0, -3.0, 3.0);
+
     autoExplorer_.setEnabled(on);
     statusBar()->showMessage(QString("Auto Explore %1").arg(on ? "ON" : "OFF"));
 }
@@ -592,6 +477,7 @@ void MainWindow::onGoalStatusMsg(const QString& msg)
 {
     statusBar()->showMessage(msg);
 
+    // 최소 파싱 규칙 (RosWorker가 emit하는 문자열 기준)
     if (msg.contains("Sending goal") || msg.contains("Goal accepted")) {
         navBusy_ = true;
     }
@@ -602,16 +488,16 @@ void MainWindow::onGoalStatusMsg(const QString& msg)
 
 void MainWindow::onAutoGoal(double x, double y, double yaw)
 {
+    // nav2가 목표 수행 중이면 자동 goal 스킵
     if (navBusy_) return;
+
+    // 자동탐색이 꺼져있으면 스킵 (안전장치)
     if (!ui->chkAutoExplore->isChecked()) return;
 
     rosThread->requestNavigateTo(x, y, yaw);
-    navBusy_ = true;
+    navBusy_ = true; // 보수적으로 즉시 Busy 처리
 }
 
-//======================
-// Session
-//======================
 void MainWindow::onSessionRefresh()
 {
     ui->cbSessionId->clear();
@@ -635,8 +521,8 @@ void MainWindow::onSessionLoad()
     }
     currentLoadedSession_ = sid;
     reloadQueryLayer(sid);
-
-    updateUiByContext();
+    statusBar()->showMessage("Loaded session: " + sid);
+    applyLayersPolicy();
 }
 
 void MainWindow::onSessionDelete()
@@ -646,6 +532,7 @@ void MainWindow::onSessionDelete()
 
     db_.deleteSession(sid);
 
+    // query layer clear
     queryLayer_.clear();
     queryLayer_.flush();
     queryLayer_.setVisible(false);
@@ -653,14 +540,12 @@ void MainWindow::onSessionDelete()
     if (currentLoadedSession_ == sid) currentLoadedSession_.clear();
 
     onSessionRefresh();
-    updateUiByContext();
+    statusBar()->showMessage("Deleted session: " + sid);
 }
 
-//======================
-// Measure
-//======================
 void MainWindow::onMeasureStart()
 {
+    // 새 세션 발급
     const QString sid = db_.beginSession();
     if (sid.isEmpty()) {
         statusBar()->showMessage("Measure Start failed: cannot create session");
@@ -670,41 +555,43 @@ void MainWindow::onMeasureStart()
     activeSessionId_ = sid;
     measuringDb_ = true;
 
+    statusBar()->showMessage("Measure Start: session=" + sid);
+
+    // UI 세션 목록 갱신(바로 콤보에 뜨게)
     onSessionRefresh();
 
-    // 방금 만든 세션을 콤보에서 선택
+    // 방금 만든 세션을 콤보에서 선택해주기(선택 기능)
     for (int i=0; i<ui->cbSessionId->count(); ++i) {
         if (ui->cbSessionId->itemData(i).toString() == sid) {
             ui->cbSessionId->setCurrentIndex(i);
             break;
         }
     }
-
-    updateUiByContext();
 }
 
 void MainWindow::onMeasureStop()
 {
     measuringDb_ = false;
     db_.endSession(activeSessionId_);
-
-    updateUiByContext();
+    statusBar()->showMessage("Measure Stop: session=" + activeSessionId_);
 }
-
-//======================
-// Filter
-//======================
 void MainWindow::onApplyFilter()
 {
     filterSsid_ = ui->cbSsid->currentText();
     filterThrEnable_ = ui->chkThrEnable->isChecked();
     filterThrRssi_ = ui->cbThr->currentText().toInt();
 
+    statusBar()->showMessage(
+        QString("Filter Applied: SSID=%1, Thr=%2%3")
+            .arg(filterSsid_)
+            .arg(filterThrEnable_ ? "ON " : "OFF ")
+            .arg(filterThrEnable_ ? QString::number(filterThrRssi_) : "")
+        );
+
     if (!currentLoadedSession_.isEmpty()) {
         reloadQueryLayer(currentLoadedSession_);
     }
-
-    updateUiByContext();
+    applyLayersPolicy();
 }
 
 void MainWindow::onSampleToDb(double x, double y, double /*yaw*/, float rssi)
@@ -722,7 +609,6 @@ void MainWindow::onSampleToDb(double x, double y, double /*yaw*/, float rssi)
 
     db_.insertSample(activeSessionId_, s);
 }
-
 void MainWindow::reloadQueryLayer(const QString& sessionId)
 {
     if (!mapReady_) return;
@@ -737,30 +623,31 @@ void MainWindow::reloadQueryLayer(const QString& sessionId)
 
         const float intensity = valueToIntensity01(r);
         queryLayer_.addPoint(px + 1, py + 1, intensity);
+
     }
     queryLayer_.flush();
     queryLayer_.setVisible(true);
 }
-
-//======================
-// Sim
-//======================
 float MainWindow::simRssiAt(double d_m) const
 {
     const double tx = ui->spTxPower->value(); // dBm (예: -40)
+    // 1m 기준이라고 가정하고, d=0일 때도 폭주하지 않게 +1
     const double rssi = tx - 20.0 * std::log10(d_m + 1.0);
     return static_cast<float>(rssi);
 }
 
 float MainWindow::simIntensityAt(double d_m) const
 {
+    // rssiToIntensity01 재사용 (이미 clamp [-90,-30])
     return rssiToIntensity01(simRssiAt(d_m));
 }
 
 void MainWindow::addSimPinAt(double x_m, double y_m)
 {
+    // 핀 저장
     simPins_.push_back({x_m, y_m});
 
+    // 핀 아이템 표시(지도 위)
     int px=0, py=0;
     if (meterToPixel(x_m, y_m, px, py)) {
         auto* pin = scene->addEllipse(-4, -4, 8, 8, QPen(Qt::blue), QBrush(Qt::blue));
@@ -771,10 +658,16 @@ void MainWindow::addSimPinAt(double x_m, double y_m)
         apPins_.push_back(pin);
     }
 
+    // Sim 레이어 재계산
     rebuildSimLayer();
-    updateUiByContext();
-}
 
+    // Sim layer 표시
+    simLayer_.setVisible(ui->chkShowHeatmap->isChecked());
+    statusBar()->showMessage(QString("Sim pin added: (%1, %2)  pins=%3")
+                                 .arg(x_m,0,'f',2).arg(y_m,0,'f',2).arg(simPins_.size()));
+    applyLayersPolicy();
+
+}
 void MainWindow::rebuildSimLayer()
 {
     if (!mapReady_) return;
@@ -782,16 +675,19 @@ void MainWindow::rebuildSimLayer()
 
     simLayer_.clear();
 
-    const double maxR_m = 6.0;
-    const int rings = 10;
-    const int angles = 24;
+    // 샘플링 파라미터(가벼운 MVP)
+    const double maxR_m = 6.0;      // 6m까지 영향
+    const int rings = 10;           // 동심원 개수
+    const int angles = 24;          // 각도 샘플 개수
 
     for (const auto& pin : simPins_) {
+        // 중심점도 한 번 찍고
         int cpx=0, cpy=0;
         if (meterToPixel(pin.x_m, pin.y_m, cpx, cpy)) {
             simLayer_.addPoint(cpx+1, cpy+1, simIntensityAt(0.0));
         }
 
+        // 동심원 샘플
         for (int ri=1; ri<=rings; ++ri) {
             const double r = maxR_m * (static_cast<double>(ri) / rings);
             const float inten = simValueToIntensity01(r);
@@ -815,31 +711,33 @@ void MainWindow::onSimEnable(bool on)
 {
     simEnabled_ = on;
 
-    // ON이면: 핀이 있으면 재계산/표시, OFF면: sim layer 숨김
-    if (on) {
-        if (!simPins_.isEmpty()) rebuildSimLayer();
+    // 켜면 기존 핀/히트맵이 있으면 보이게
+    if (!simPins_.isEmpty()) {
+        simLayer_.setVisible(on && ui->chkShowHeatmap->isChecked());
     } else {
-        if (simLayer_.isReady()) simLayer_.setVisible(false);
+        simLayer_.setVisible(false);
     }
 
-    updateUiByContext();
+    statusBar()->showMessage(QString("Sim Click %1").arg(on ? "ON" : "OFF"));
 }
 
 void MainWindow::onSimParamsChanged()
 {
+    // UI 값 -> 멤버 상태로 저장
     simTxPower_ = ui->spTxPower->value();
     simChannel_ = ui->spSimChannel->value();
     simBandwidth_ = ui->cbSimBandwidth->currentText().toInt();
 
-    if (ui->chkSimEnable->isChecked() && !simPins_.isEmpty()) {
+    // 핀이 이미 있으면 즉시 재계산(원하면 이 줄 제거 가능)
+    if (!simPins_.isEmpty()) {
         rebuildSimLayer();
+        simLayer_.setVisible(simEnabled_ && ui->chkShowHeatmap->isChecked());
     }
-
-    updateUiByContext();
 }
 
 void MainWindow::onClearPins()
 {
+    // 핀 아이템 삭제
     for (auto* it : apPins_) {
         if (!it) continue;
         scene->removeItem(it);
@@ -847,18 +745,71 @@ void MainWindow::onClearPins()
     }
     apPins_.clear();
 
+    // 핀 데이터 삭제
     simPins_.clear();
 
+    // sim layer 제거
     simLayer_.clear();
     simLayer_.flush();
     simLayer_.setVisible(false);
 
-    updateUiByContext();
+    statusBar()->showMessage("Sim pins cleared");
+    applyLayersPolicy();
+
+}
+void MainWindow::onModeChanged()
+{
+    if (ui->rbModeView->isChecked())         currentMode_ = Mode::View;
+    else if (ui->rbModeMeasure->isChecked()) currentMode_ = Mode::Measurement;
+    else if (ui->rbModeQuery->isChecked())   currentMode_ = Mode::Query;
+    else if (ui->rbModeSim->isChecked())     currentMode_ = Mode::SimAP;
+
+    applyModeUi();
 }
 
-//======================
-// Metric
-//======================
+void MainWindow::applyModeUi()
+{
+
+    ui->gbMeasure->setEnabled(currentMode_ == Mode::Measurement);
+    ui->gbSession->setEnabled(currentMode_ == Mode::Query);
+    ui->gbFilter->setEnabled(currentMode_ == Mode::Query);   // Query에서 주로 사용
+    ui->gbSim->setEnabled(currentMode_ == Mode::SimAP);
+
+    ui->gbMetric->setEnabled(currentMode_ == Mode::Query || currentMode_ == Mode::SimAP);
+
+    if (currentMode_ != Mode::SimAP) {
+        // 체크를 끄고 싶지 않으면 setEnabled(false)만 해도 됨
+        ui->chkSimEnable->setChecked(false);
+        simEnabled_ = false;
+        simLayer_.setVisible(false); // sim 모드 아닐 때는 기본 숨김(겹침 방지)
+    }
+
+    const bool showHeat = ui->chkShowHeatmap->isChecked();
+
+    if (currentMode_ == Mode::View || currentMode_ == Mode::Measurement) {
+        if (heatItem_) heatItem_->setVisible(true);
+        if (queryLayer_.isReady()) queryLayer_.setVisible(false);
+        if (simLayer_.isReady())   simLayer_.setVisible(false);
+    }
+    else if (currentMode_ == Mode::Query) {
+        if (heatItem_) heatItem_->setVisible(false);
+        if (queryLayer_.isReady()) queryLayer_.setVisible(showHeat && !currentLoadedSession_.isEmpty());
+        if (simLayer_.isReady())   simLayer_.setVisible(false);
+        if (currentLoadedSession_.isEmpty()) {
+            statusBar()->showMessage("Query mode: select a session and press Load");
+        }
+    }
+    else if (currentMode_ == Mode::SimAP) {
+        if (heatItem_) heatItem_->setVisible(false);
+        if (queryLayer_.isReady()) queryLayer_.setVisible(false);
+        if (simLayer_.isReady())   simLayer_.setVisible(showHeat && simEnabled_ && !simPins_.isEmpty());
+        statusBar()->showMessage("Sim mode: Shift+Click or Right Click to drop AP pins");
+    }
+
+    if (robotItem) robotItem->setVisible(ui->chkShowRobot->isChecked() && poseReady_);
+    applyLayersPolicy();
+}
+
 void MainWindow::onMetricChanged(int)
 {
     const QString m = ui->cbMetric->currentText();
@@ -873,16 +824,16 @@ void MainWindow::onMetricChanged(int)
     // 현재 지원 상태 안내
     if (currentMetric_ != Metric::RSSI) {
         statusBar()->showMessage("Metric not implemented yet (only RSSI available).");
-    }
+    } else {
+        statusBar()->showMessage("Metric: RSSI");
 
-    if (!currentLoadedSession_.isEmpty()) {
+    if (currentMode_ == Mode::Query && !currentLoadedSession_.isEmpty()) {
         reloadQueryLayer(currentLoadedSession_);
     }
-    if (ui->chkSimEnable->isChecked() && !simPins_.isEmpty()) {
+    if (currentMode_ == Mode::SimAP && simEnabled_ && !simPins_.isEmpty()) {
         rebuildSimLayer();
     }
-
-    updateUiByContext();
+    }
 }
 
 float MainWindow::valueToIntensity01(const SampleRow& s) const
@@ -890,6 +841,8 @@ float MainWindow::valueToIntensity01(const SampleRow& s) const
     switch (currentMetric_) {
     case Metric::RSSI:
         return rssiToIntensity01(s.rssi);
+
+    // 아직 데이터가 없으니 RSSI로 fallback (앱 안정 우선)
     case Metric::SNR:
     case Metric::ApCount:
     case Metric::Noise:
@@ -905,54 +858,55 @@ float MainWindow::simValueToIntensity01(double d_m) const
 
     switch (currentMetric_) {
     case Metric::RSSI:
+        return rssiToIntensity01(rssi);
+
     default:
         return rssiToIntensity01(rssi);
     }
 }
 
-//======================
-// 히트맵 겹침 방지 + 컨텍스트 우선순위(Sim > Query > Live)
-//======================
+//히트맵 겹침 방지
 void MainWindow::applyLayersPolicy()
 {
     const bool showHeat = ui->chkShowHeatmap->isChecked();
 
-    // 모두 끄고 시작(겹침 방지)
+    // 일단 모두 끄고 시작 (겹침 방지 핵심)
     if (heatItem_) heatItem_->setVisible(false);
     if (queryLayer_.isReady()) queryLayer_.setVisible(false);
     if (simLayer_.isReady())   simLayer_.setVisible(false);
 
-    if (!showHeat) return;
-
-    const bool simCtx   = ui->chkSimEnable->isChecked();
-    const bool queryCtx = !currentLoadedSession_.isEmpty();
-
-    // 1) Sim
-    if (simCtx && simEnabled_ && !simPins_.isEmpty() && simLayer_.isReady()) {
-        simLayer_.setVisible(true);
+    if (!showHeat) {
+        // heatmap 전체 OFF
         return;
     }
 
-    // 2) Query
-    if (queryCtx && queryLayer_.isReady()) {
-        queryLayer_.setVisible(true);
-        return;
-    }
+    // 모드별 우선순위
+    switch (currentMode_) {
+    case Mode::View:
+    case Mode::Measurement:
+        // 실시간 누적 히트맵만
+        if (heatItem_) heatItem_->setVisible(true);
+        break;
 
-    // 3) Live
-    if (heatItem_) heatItem_->setVisible(true);
+    case Mode::Query:
+        if (!currentLoadedSession_.isEmpty() && queryLayer_.isReady())
+            queryLayer_.setVisible(true);
+        else if (heatItem_) // 로드 안됐으면 fallback(선택)
+            heatItem_->setVisible(true);
+        break;
+
+    case Mode::SimAP:
+        if (simEnabled_ && !simPins_.isEmpty() && simLayer_.isReady())
+            simLayer_.setVisible(true);
+        else if (heatItem_) // sim 조건이 안되면 fallback(선택)
+            heatItem_->setVisible(true);
+        break;
+    }
 }
+
 
 void MainWindow::on_btnSessionLoad_clicked()
 {
-    // (Qt Designer auto-slot이 남아있으면 여기서 onSessionLoad로 연결해도 됨)
-    onSessionLoad();
-}
 
-void MainWindow::onLayerHeatmap(bool /*on*/)
-{
-    // Mode 버튼 제거 후에는
-    // 히트맵 on/off는 컨텍스트 정책으로 통합
-    updateUiByContext();
 }
 

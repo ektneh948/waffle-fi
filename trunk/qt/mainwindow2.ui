@@ -6,442 +6,642 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>800</width>
-    <height>600</height>
+    <width>1280</width>
+    <height>720</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>MainWindow</string>
   </property>
+
   <widget class="QWidget" name="centralwidget">
-   <layout class="QVBoxLayout" name="verticalLayout_4">
+   <layout class="QVBoxLayout" name="verticalLayout_root">
+    <property name="spacing">
+     <number>6</number>
+    </property>
+    <property name="leftMargin">
+     <number>6</number>
+    </property>
+    <property name="topMargin">
+     <number>6</number>
+    </property>
+    <property name="rightMargin">
+     <number>6</number>
+    </property>
+    <property name="bottomMargin">
+     <number>6</number>
+    </property>
+
+    <!-- =========================
+         Top ToolBar Row (like screenshot)
+         ========================= -->
     <item>
-     <layout class="QVBoxLayout" name="verticalLayout" stretch="7,3">
+     <widget class="QFrame" name="topBar">
+      <property name="minimumHeight">
+       <number>52</number>
+      </property>
+      <property name="maximumHeight">
+       <number>60</number>
+      </property>
+      <property name="frameShape">
+       <enum>QFrame::StyledPanel</enum>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">
+#topBar {
+  background: #F3F4F6;
+  border: 1px solid #D1D5DB;
+  border-radius: 8px;
+}
+QToolButton, QPushButton {
+  border: 1px solid #D1D5DB;
+  background: #FFFFFF;
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-weight: 600;
+}
+QToolButton:hover, QPushButton:hover { background: #F9FAFB; }
+QToolButton:pressed, QPushButton:pressed { background: #EEF2FF; }
+QComboBox {
+  border: 1px solid #D1D5DB;
+  background: #FFFFFF;
+  border-radius: 6px;
+  padding: 4px 10px;
+  min-height: 28px;
+  font-weight: 600;
+}
+QLabel { font-weight: 700; color: #111827; }
+       </string>
+      </property>
+
+      <layout class="QHBoxLayout" name="topBarLayout">
+       <property name="leftMargin">
+        <number>10</number>
+       </property>
+       <property name="topMargin">
+        <number>8</number>
+       </property>
+       <property name="rightMargin">
+        <number>10</number>
+       </property>
+       <property name="bottomMargin">
+        <number>8</number>
+       </property>
+       <property name="spacing">
+        <number>8</number>
+       </property>
+
+       <!-- left: pseudo toolbar controls (new widgets allowed) -->
+       <item>
+        <widget class="QLabel" name="lblMetric">
+         <property name="text">
+          <string>Signal Strength</string>
+         </property>
+        </widget>
+       </item>
+
+       <item>
+        <widget class="QComboBox" name="cbMetric">
+         <property name="minimumWidth">
+          <number>170</number>
+         </property>
+        </widget>
+       </item>
+
+       <item>
+        <widget class="QLabel" name="lblFor">
+         <property name="text">
+          <string>for</string>
+         </property>
+        </widget>
+       </item>
+
+       <item>
+        <widget class="QComboBox" name="cbApScope">
+         <property name="minimumWidth">
+          <number>170</number>
+         </property>
+        </widget>
+       </item>
+
+       <item>
+        <widget class="QLabel" name="lblOn">
+         <property name="text">
+          <string>on</string>
+         </property>
+        </widget>
+       </item>
+
+       <item>
+        <widget class="QComboBox" name="cbChannel">
+         <property name="minimumWidth">
+          <number>90</number>
+         </property>
+        </widget>
+       </item>
+
+       <item>
+        <widget class="QComboBox" name="cbBand">
+         <property name="minimumWidth">
+          <number>70</number>
+         </property>
+        </widget>
+       </item>
+
+       <item>
+        <widget class="QComboBox" name="cbBoth">
+         <property name="minimumWidth">
+          <number>70</number>
+         </property>
+        </widget>
+       </item>
+
+       <item>
+        <widget class="QPushButton" name="btnOptions">
+         <property name="text">
+          <string>Options</string>
+         </property>
+        </widget>
+       </item>
+
+       <item>
+        <spacer name="spacerTopGrow">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>40</width>
+           <height>20</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+
+       <!-- right: status pills like screenshot (new) -->
+       <item>
+        <widget class="QLabel" name="lblStatusPills">
+         <property name="text">
+          <string>  -50dBm   50dB   216Mbps   5APs   0APs  </string>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">
+QLabel {
+  background: #111827;
+  color: #FFFFFF;
+  border-radius: 10px;
+  padding: 6px 10px;
+  font-weight: 800;
+}
+          </string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </item>
+
+    <!-- =========================
+         Main Area: Left icon strip + Map
+         ========================= -->
+    <item>
+     <layout class="QHBoxLayout" name="mainRow">
+      <property name="spacing">
+       <number>8</number>
+      </property>
+      <property name="leftMargin">
+       <number>0</number>
+      </property>
+      <property name="topMargin">
+       <number>0</number>
+      </property>
+      <property name="rightMargin">
+       <number>0</number>
+      </property>
+      <property name="bottomMargin">
+       <number>0</number>
+      </property>
+
+      <!-- Left Tool Strip (keep existing objectNames for mode buttons) -->
       <item>
-       <layout class="QHBoxLayout" name="horizontalLayout" stretch="1,9">
-        <item>
-         <layout class="QVBoxLayout" name="verticalLayout_2" stretch="1,0,1,0,1">
-          <property name="spacing">
-           <number>8</number>
-          </property>
-          <property name="leftMargin">
-           <number>4</number>
-          </property>
-          <property name="topMargin">
-           <number>4</number>
-          </property>
-          <property name="rightMargin">
-           <number>4</number>
-          </property>
-          <property name="bottomMargin">
-           <number>4</number>
-          </property>
-          <item>
-           <widget class="QPushButton" name="pBt_RunMode">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Minimum" vsizetype="MinimumExpanding">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="font">
-             <font>
-              <pointsize>16</pointsize>
-              <bold>true</bold>
-             </font>
-            </property>
-            <property name="autoFillBackground">
-             <bool>false</bool>
-            </property>
-            <property name="text">
-             <string>Run</string>
-            </property>
-            <property name="flat">
-             <bool>false</bool>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <spacer name="verticalSpacer">
-            <property name="orientation">
-             <enum>Qt::Orientation::Vertical</enum>
-            </property>
-            <property name="sizeHint" stdset="0">
-             <size>
-              <width>20</width>
-              <height>40</height>
-             </size>
-            </property>
-           </spacer>
-          </item>
-          <item>
-           <widget class="QPushButton" name="pBt_ViewMode">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Minimum" vsizetype="MinimumExpanding">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="font">
-             <font>
-              <pointsize>16</pointsize>
-              <bold>true</bold>
-             </font>
-            </property>
-            <property name="text">
-             <string>View</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <spacer name="verticalSpacer_2">
-            <property name="orientation">
-             <enum>Qt::Orientation::Vertical</enum>
-            </property>
-            <property name="sizeHint" stdset="0">
-             <size>
-              <width>20</width>
-              <height>40</height>
-             </size>
-            </property>
-           </spacer>
-          </item>
-          <item>
-           <widget class="QPushButton" name="pBt_SimulMode">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Minimum" vsizetype="MinimumExpanding">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="font">
-             <font>
-              <pointsize>16</pointsize>
-              <bold>true</bold>
-             </font>
-            </property>
-            <property name="text">
-             <string>Simul</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </item>
-        <item>
-         <layout class="QVBoxLayout" name="verticalLayout_3">
-          <item>
-           <widget class="QGraphicsView" name="graphicsView"/>
-          </item>
-         </layout>
-        </item>
-       </layout>
+       <widget class="QFrame" name="leftToolStrip">
+        <property name="minimumWidth">
+         <number>80</number>
+        </property>
+        <property name="maximumWidth">
+         <number>90</number>
+        </property>
+        <property name="frameShape">
+         <enum>QFrame::StyledPanel</enum>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">
+#leftToolStrip {
+  background: #F9FAFB;
+  border: 1px solid #D1D5DB;
+  border-radius: 10px;
+}
+#leftToolStrip QPushButton {
+  background: #FFFFFF;
+  border: 1px solid #D1D5DB;
+  border-radius: 10px;
+  padding: 10px 6px;
+  font-weight: 800;
+  font-size: 12pt;
+  color: #111827;
+}
+#leftToolStrip QPushButton:hover { background: #F3F4F6; }
+#leftToolStrip QPushButton:checked {
+  background: #2563EB;
+  color: #FFFFFF;
+  border-color: #1D4ED8;
+}
+         </string>
+        </property>
+
+        <layout class="QVBoxLayout" name="leftToolLayout">
+         <property name="leftMargin">
+          <number>8</number>
+         </property>
+         <property name="topMargin">
+          <number>8</number>
+         </property>
+         <property name="rightMargin">
+          <number>8</number>
+         </property>
+         <property name="bottomMargin">
+          <number>8</number>
+         </property>
+         <property name="spacing">
+          <number>10</number>
+         </property>
+
+         <!-- existing object names preserved -->
+         <item>
+          <widget class="QPushButton" name="pBt_RunMode">
+           <property name="text">
+            <string>Run</string>
+           </property>
+           <property name="checkable">
+            <bool>true</bool>
+           </property>
+           <property name="checked">
+            <bool>true</bool>
+           </property>
+           <property name="minimumHeight">
+            <number>64</number>
+           </property>
+          </widget>
+         </item>
+
+         <item>
+          <widget class="QPushButton" name="pBt_ViewMode">
+           <property name="text">
+            <string>View</string>
+           </property>
+           <property name="checkable">
+            <bool>true</bool>
+           </property>
+           <property name="minimumHeight">
+            <number>64</number>
+           </property>
+          </widget>
+         </item>
+
+         <item>
+          <widget class="QPushButton" name="pBt_SimulMode">
+           <property name="text">
+            <string>Simul</string>
+           </property>
+           <property name="checkable">
+            <bool>true</bool>
+           </property>
+           <property name="minimumHeight">
+            <number>64</number>
+           </property>
+          </widget>
+         </item>
+
+         <item>
+          <spacer name="spacerLeftBottom">
+           <property name="orientation">
+            <enum>Qt::Vertical</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>20</width>
+             <height>40</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+        </layout>
+       </widget>
       </item>
+
+      <!-- Map (graphicsView) -->
       <item>
-       <layout class="QHBoxLayout" name="horizontalLayout_2">
-        <item>
-         <widget class="QStackedWidget" name="pStackedWidget">
-          <property name="currentIndex">
-           <number>2</number>
-          </property>
-          <widget class="QWidget" name="pageRun">
-           <layout class="QVBoxLayout" name="verticalLayout_6">
-            <item>
-             <layout class="QVBoxLayout" name="verticalLayout_5">
-              <property name="spacing">
-               <number>8</number>
-              </property>
-              <property name="leftMargin">
-               <number>4</number>
-              </property>
-              <property name="topMargin">
-               <number>4</number>
-              </property>
-              <property name="rightMargin">
-               <number>4</number>
-              </property>
-              <property name="bottomMargin">
-               <number>4</number>
-              </property>
-              <item>
-               <layout class="QHBoxLayout" name="horizontalLayout_3" stretch="4,2,4">
-                <item>
-                 <spacer name="horizontalSpacer">
-                  <property name="orientation">
-                   <enum>Qt::Orientation::Horizontal</enum>
-                  </property>
-                  <property name="sizeHint" stdset="0">
-                   <size>
-                    <width>40</width>
-                    <height>20</height>
-                   </size>
-                  </property>
-                 </spacer>
-                </item>
-                <item>
-                 <widget class="QPushButton" name="pBt_Start">
-                  <property name="sizePolicy">
-                   <sizepolicy hsizetype="MinimumExpanding" vsizetype="MinimumExpanding">
-                    <horstretch>0</horstretch>
-                    <verstretch>0</verstretch>
-                   </sizepolicy>
-                  </property>
-                  <property name="font">
-                   <font>
-                    <pointsize>16</pointsize>
-                    <bold>true</bold>
-                   </font>
-                  </property>
-                  <property name="text">
-                   <string>Start</string>
-                  </property>
-                  <property name="checkable">
-                   <bool>true</bool>
-                  </property>
-                  <property name="checked">
-                   <bool>false</bool>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <spacer name="horizontalSpacer_2">
-                  <property name="orientation">
-                   <enum>Qt::Orientation::Horizontal</enum>
-                  </property>
-                  <property name="sizeHint" stdset="0">
-                   <size>
-                    <width>40</width>
-                    <height>20</height>
-                   </size>
-                  </property>
-                 </spacer>
-                </item>
-               </layout>
-              </item>
-             </layout>
-            </item>
-           </layout>
-          </widget>
-          <widget class="QWidget" name="pageView">
-           <layout class="QVBoxLayout" name="verticalLayout_10">
-            <item>
-             <layout class="QHBoxLayout" name="horizontalLayout_4">
-              <item>
-               <spacer name="horizontalSpacer_3">
-                <property name="orientation">
-                 <enum>Qt::Orientation::Horizontal</enum>
-                </property>
-                <property name="sizeHint" stdset="0">
-                 <size>
-                  <width>40</width>
-                  <height>20</height>
-                 </size>
-                </property>
-               </spacer>
-              </item>
-              <item>
-               <layout class="QGridLayout" name="gridLayout" columnminimumwidth="120,120,120">
-                <property name="leftMargin">
-                 <number>4</number>
-                </property>
-                <property name="topMargin">
-                 <number>4</number>
-                </property>
-                <property name="rightMargin">
-                 <number>4</number>
-                </property>
-                <property name="bottomMargin">
-                 <number>4</number>
-                </property>
-                <property name="spacing">
-                 <number>8</number>
-                </property>
-                <item row="3" column="1">
-                 <widget class="QPushButton" name="pBt_DB_Load">
-                  <property name="font">
-                   <font>
-                    <pointsize>12</pointsize>
-                    <bold>true</bold>
-                   </font>
-                  </property>
-                  <property name="text">
-                   <string>Load</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="3" column="0">
-                 <widget class="QPushButton" name="pBt_DB_Refresh">
-                  <property name="font">
-                   <font>
-                    <pointsize>12</pointsize>
-                    <bold>true</bold>
-                   </font>
-                  </property>
-                  <property name="text">
-                   <string>Refresh</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="3" column="2">
-                 <widget class="QPushButton" name="pBt_DB_Delete">
-                  <property name="font">
-                   <font>
-                    <pointsize>12</pointsize>
-                    <bold>true</bold>
-                   </font>
-                  </property>
-                  <property name="text">
-                   <string>Delete</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="4" column="1">
-                 <spacer name="verticalSpacer_4">
-                  <property name="orientation">
-                   <enum>Qt::Orientation::Vertical</enum>
-                  </property>
-                  <property name="sizeHint" stdset="0">
-                   <size>
-                    <width>20</width>
-                    <height>40</height>
-                   </size>
-                  </property>
-                 </spacer>
-                </item>
-                <item row="0" column="1">
-                 <spacer name="verticalSpacer_3">
-                  <property name="orientation">
-                   <enum>Qt::Orientation::Vertical</enum>
-                  </property>
-                  <property name="sizeHint" stdset="0">
-                   <size>
-                    <width>20</width>
-                    <height>40</height>
-                   </size>
-                  </property>
-                 </spacer>
-                </item>
-                <item row="2" column="0" colspan="2">
-                 <widget class="QComboBox" name="pComboBox_Session">
-                  <property name="font">
-                   <font>
-                    <pointsize>12</pointsize>
-                    <bold>true</bold>
-                   </font>
-                  </property>
-                 </widget>
-                </item>
-                <item row="2" column="2">
-                 <widget class="QComboBox" name="pComboBox_SSID">
-                  <property name="font">
-                   <font>
-                    <pointsize>12</pointsize>
-                    <bold>true</bold>
-                   </font>
-                  </property>
-                 </widget>
-                </item>
-                <item row="1" column="2">
-                 <widget class="QLabel" name="label_2">
-                  <property name="font">
-                   <font>
-                    <pointsize>12</pointsize>
-                    <bold>true</bold>
-                   </font>
-                  </property>
-                  <property name="text">
-                   <string>SSID</string>
-                  </property>
-                  <property name="alignment">
-                   <set>Qt::AlignmentFlag::AlignCenter</set>
-                  </property>
-                 </widget>
-                </item>
-                <item row="1" column="0">
-                 <widget class="QLabel" name="label">
-                  <property name="font">
-                   <font>
-                    <pointsize>12</pointsize>
-                    <bold>true</bold>
-                   </font>
-                  </property>
-                  <property name="text">
-                   <string>Session</string>
-                  </property>
-                  <property name="alignment">
-                   <set>Qt::AlignmentFlag::AlignCenter</set>
-                  </property>
-                 </widget>
-                </item>
-               </layout>
-              </item>
-              <item>
-               <spacer name="horizontalSpacer_4">
-                <property name="orientation">
-                 <enum>Qt::Orientation::Horizontal</enum>
-                </property>
-                <property name="sizeHint" stdset="0">
-                 <size>
-                  <width>40</width>
-                  <height>20</height>
-                 </size>
-                </property>
-               </spacer>
-              </item>
-             </layout>
-            </item>
-           </layout>
-          </widget>
-          <widget class="QWidget" name="pageSimul">
-           <layout class="QVBoxLayout" name="verticalLayout_8">
-            <item>
-             <layout class="QVBoxLayout" name="verticalLayout_7">
-              <item>
-               <widget class="QCheckBox" name="pCB_AP_Able">
-                <property name="text">
-                 <string>CheckBox</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QPushButton" name="pBt_AP_Clear">
-                <property name="font">
-                 <font>
-                  <pointsize>16</pointsize>
-                  <bold>true</bold>
-                 </font>
-                </property>
-                <property name="text">
-                 <string>Clear</string>
-                </property>
-                <property name="flat">
-                 <bool>false</bool>
-                </property>
-               </widget>
-              </item>
-             </layout>
-            </item>
-           </layout>
-          </widget>
-         </widget>
-        </item>
-       </layout>
+       <widget class="QFrame" name="mapFrame">
+        <property name="frameShape">
+         <enum>QFrame::StyledPanel</enum>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">
+#mapFrame {
+  background: #FFFFFF;
+  border: 1px solid #D1D5DB;
+  border-radius: 10px;
+}
+QGraphicsView {
+  border: 0px;
+  background: #E5E7EB;
+  border-radius: 10px;
+}
+         </string>
+        </property>
+        <layout class="QVBoxLayout" name="mapFrameLayout">
+         <property name="leftMargin">
+          <number>6</number>
+         </property>
+         <property name="topMargin">
+          <number>6</number>
+         </property>
+         <property name="rightMargin">
+          <number>6</number>
+         </property>
+         <property name="bottomMargin">
+          <number>6</number>
+         </property>
+         <item>
+          <widget class="QGraphicsView" name="graphicsView"/>
+         </item>
+        </layout>
+       </widget>
       </item>
+
      </layout>
     </item>
+
+    <!-- =========================
+         Bottom Dock Panel (stacked)
+         ========================= -->
+    <item>
+     <widget class="QFrame" name="bottomDock">
+      <property name="minimumHeight">
+       <number>150</number>
+      </property>
+      <property name="maximumHeight">
+       <number>220</number>
+      </property>
+      <property name="frameShape">
+       <enum>QFrame::StyledPanel</enum>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">
+#bottomDock {
+  background: #F3F4F6;
+  border: 1px solid #D1D5DB;
+  border-radius: 10px;
+}
+#bottomDock QLabel { color:#111827; font-weight:800; }
+#bottomDock QPushButton {
+  background:#FFFFFF;
+  border:1px solid #D1D5DB;
+  border-radius:8px;
+  padding:8px 12px;
+  font-weight:800;
+}
+#bottomDock QPushButton:hover { background:#F9FAFB; }
+#bottomDock QComboBox {
+  background:#FFFFFF;
+  border:1px solid #D1D5DB;
+  border-radius:8px;
+  padding:6px 10px;
+  font-weight:800;
+}
+#bottomDock QCheckBox { font-weight:800; }
+       </string>
+      </property>
+
+      <layout class="QVBoxLayout" name="bottomDockLayout">
+       <property name="leftMargin">
+        <number>10</number>
+       </property>
+       <property name="topMargin">
+        <number>10</number>
+       </property>
+       <property name="rightMargin">
+        <number>10</number>
+       </property>
+       <property name="bottomMargin">
+        <number>10</number>
+       </property>
+
+       <item>
+        <widget class="QStackedWidget" name="pStackedWidget">
+         <property name="currentIndex">
+          <number>0</number>
+         </property>
+
+         <!-- ===== pageRun ===== -->
+         <widget class="QWidget" name="pageRun">
+          <layout class="QHBoxLayout" name="runRow">
+           <property name="spacing">
+            <number>10</number>
+           </property>
+
+           <item>
+            <widget class="QLabel" name="lblRunHint">
+             <property name="text">
+              <string>Measurement</string>
+             </property>
+            </widget>
+           </item>
+
+           <item>
+            <widget class="QPushButton" name="pBt_Start">
+             <property name="text">
+              <string>Start</string>
+             </property>
+             <property name="checkable">
+              <bool>true</bool>
+             </property>
+             <property name="minimumHeight">
+              <number>44</number>
+             </property>
+             <property name="minimumWidth">
+              <number>140</number>
+             </property>
+            </widget>
+           </item>
+
+           <item>
+            <spacer name="runGrow">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>40</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+
+          </layout>
+         </widget>
+
+         <!-- ===== pageView ===== -->
+         <widget class="QWidget" name="pageView">
+          <layout class="QGridLayout" name="viewGrid">
+           <property name="horizontalSpacing">
+            <number>10</number>
+           </property>
+           <property name="verticalSpacing">
+            <number>10</number>
+           </property>
+
+           <item row="0" column="0">
+            <widget class="QLabel" name="label">
+             <property name="text">
+              <string>Session</string>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignLeft|Qt::AlignVCenter</set>
+             </property>
+            </widget>
+           </item>
+
+           <item row="0" column="1">
+            <widget class="QComboBox" name="pComboBox_Session"/>
+           </item>
+
+           <item row="0" column="2">
+            <widget class="QPushButton" name="pBt_DB_Refresh">
+             <property name="text">
+              <string>Refresh</string>
+             </property>
+            </widget>
+           </item>
+
+           <item row="1" column="0">
+            <widget class="QLabel" name="label_2">
+             <property name="text">
+              <string>SSID</string>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignLeft|Qt::AlignVCenter</set>
+             </property>
+            </widget>
+           </item>
+
+           <item row="1" column="1">
+            <widget class="QComboBox" name="pComboBox_SSID"/>
+           </item>
+
+           <item row="1" column="2">
+            <widget class="QPushButton" name="pBt_DB_Load">
+             <property name="text">
+              <string>Load</string>
+             </property>
+            </widget>
+           </item>
+
+           <item row="0" column="3" rowspan="2">
+            <widget class="QPushButton" name="pBt_DB_Delete">
+             <property name="text">
+              <string>Delete</string>
+             </property>
+             <property name="minimumWidth">
+              <number>120</number>
+             </property>
+            </widget>
+           </item>
+
+           <item row="0" column="4" rowspan="2">
+            <spacer name="viewGrow">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>40</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+
+          </layout>
+         </widget>
+
+         <!-- ===== pageSimul ===== -->
+         <widget class="QWidget" name="pageSimul">
+          <layout class="QHBoxLayout" name="simulRow">
+           <property name="spacing">
+            <number>12</number>
+           </property>
+
+           <item>
+            <widget class="QCheckBox" name="pCB_AP_Able">
+             <property name="text">
+              <string>Enable AP Simulation</string>
+             </property>
+            </widget>
+           </item>
+
+           <item>
+            <widget class="QPushButton" name="pBt_AP_Clear">
+             <property name="text">
+              <string>Clear Pins</string>
+             </property>
+             <property name="minimumWidth">
+              <number>140</number>
+             </property>
+            </widget>
+           </item>
+
+           <item>
+            <spacer name="simulGrow">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>40</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+
+          </layout>
+         </widget>
+
+        </widget>
+       </item>
+
+      </layout>
+     </widget>
+    </item>
+
    </layout>
   </widget>
+
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>800</width>
+     <width>1280</width>
      <height>22</height>
     </rect>
    </property>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
  </widget>
+
  <resources/>
  <connections/>
 </ui>
