@@ -13,7 +13,6 @@
   <property name="windowTitle">
    <string>wifi_qt</string>
   </property>
-
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="rootV">
     <property name="spacing">
@@ -31,16 +30,12 @@
     <property name="bottomMargin">
      <number>8</number>
     </property>
-
-    <!-- ===================== -->
-    <!-- Top Bar 1 (tabs + start/stop toggle + metric + auto) -->
-    <!-- ===================== -->
     <item>
      <widget class="QFrame" name="topBar1">
       <property name="minimumSize">
        <size>
         <width>0</width>
-        <height>42</height>
+        <height>60</height>
        </size>
       </property>
       <property name="maximumSize">
@@ -50,10 +45,10 @@
        </size>
       </property>
       <property name="frameShape">
-       <enum>QFrame::StyledPanel</enum>
+       <enum>QFrame::Shape::StyledPanel</enum>
       </property>
       <property name="frameShadow">
-       <enum>QFrame::Plain</enum>
+       <enum>QFrame::Shadow::Plain</enum>
       </property>
       <layout class="QHBoxLayout" name="topBar1Layout">
        <property name="spacing">
@@ -71,29 +66,23 @@
        <property name="bottomMargin">
         <number>4</number>
        </property>
-
-       <!-- Tab buttons -->
-       <item>
-        <widget class="QToolButton" name="tbMode">
-         <property name="text">
-          <string>Mode</string>
-         </property>
-         <property name="checkable">
-          <bool>true</bool>
-         </property>
-         <property name="autoExclusive">
-          <bool>true</bool>
-         </property>
-         <property name="toolButtonStyle">
-          <enum>Qt::ToolButtonTextUnderIcon</enum>
-         </property>
-        </widget>
-       </item>
        <item>
         <widget class="QToolButton" name="tbSession">
+         <property name="minimumSize">
+          <size>
+           <width>100</width>
+           <height>30</height>
+          </size>
+         </property>
          <property name="text">
           <string>Session</string>
          </property>
+         <property name="iconSize">
+          <size>
+           <width>36</width>
+           <height>29</height>
+          </size>
+         </property>
          <property name="checkable">
           <bool>true</bool>
          </property>
@@ -101,12 +90,18 @@
           <bool>true</bool>
          </property>
          <property name="toolButtonStyle">
-          <enum>Qt::ToolButtonTextUnderIcon</enum>
+          <enum>Qt::ToolButtonStyle::ToolButtonTextUnderIcon</enum>
          </property>
         </widget>
        </item>
        <item>
         <widget class="QToolButton" name="tbSim">
+         <property name="minimumSize">
+          <size>
+           <width>100</width>
+           <height>30</height>
+          </size>
+         </property>
          <property name="text">
           <string>Sim</string>
          </property>
@@ -117,28 +112,18 @@
           <bool>true</bool>
          </property>
          <property name="toolButtonStyle">
-          <enum>Qt::ToolButtonTextUnderIcon</enum>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QToolButton" name="tbMetric">
-         <property name="text">
-          <string>Metric</string>
-         </property>
-         <property name="checkable">
-          <bool>true</bool>
-         </property>
-         <property name="autoExclusive">
-          <bool>true</bool>
-         </property>
-         <property name="toolButtonStyle">
-          <enum>Qt::ToolButtonTextUnderIcon</enum>
+          <enum>Qt::ToolButtonStyle::ToolButtonTextUnderIcon</enum>
          </property>
         </widget>
        </item>
        <item>
         <widget class="QToolButton" name="tbLayers">
+         <property name="minimumSize">
+          <size>
+           <width>100</width>
+           <height>30</height>
+          </size>
+         </property>
          <property name="text">
           <string>Layers</string>
          </property>
@@ -149,28 +134,48 @@
           <bool>true</bool>
          </property>
          <property name="toolButtonStyle">
-          <enum>Qt::ToolButtonTextUnderIcon</enum>
+          <enum>Qt::ToolButtonStyle::ToolButtonTextUnderIcon</enum>
          </property>
         </widget>
        </item>
-
-       <!-- separator -->
        <item>
         <widget class="QFrame" name="vLine1">
+         <property name="minimumSize">
+          <size>
+           <width>50</width>
+           <height>0</height>
+          </size>
+         </property>
          <property name="frameShape">
-          <enum>QFrame::VLine</enum>
+          <enum>QFrame::Shape::VLine</enum>
          </property>
          <property name="frameShadow">
-          <enum>QFrame::Sunken</enum>
+          <enum>QFrame::Shadow::Sunken</enum>
          </property>
         </widget>
        </item>
-
-       <!-- Measurement: single toggle button (btnMeasureStart reused) -->
        <item>
         <widget class="QPushButton" name="btnMeasureStart">
+         <property name="minimumSize">
+          <size>
+           <width>300</width>
+           <height>30</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>16777215</width>
+           <height>16777215</height>
+          </size>
+         </property>
          <property name="text">
           <string>Start</string>
+         </property>
+         <property name="iconSize">
+          <size>
+           <width>16</width>
+           <height>16</height>
+          </size>
          </property>
          <property name="checkable">
           <bool>true</bool>
@@ -180,37 +185,10 @@
          </property>
         </widget>
        </item>
-
-       <!-- Keep Stop button objectName but hide it -->
-       <item>
-        <widget class="QPushButton" name="btnMeasureStop">
-         <property name="visible">
-          <bool>false</bool>
-         </property>
-         <property name="enabled">
-          <bool>false</bool>
-         </property>
-         <property name="text">
-          <string>Stop</string>
-         </property>
-        </widget>
-       </item>
-
-       <!-- Metric -->
-       <item>
-        <widget class="QComboBox" name="cbMetric">
-         <item><property name="text"><string>RSSI</string></property></item>
-         <item><property name="text"><string>SNR</string></property></item>
-         <item><property name="text"><string>AP Count</string></property></item>
-         <item><property name="text"><string>Interference/Noise</string></property></item>
-         <item><property name="text"><string>Throughput(Max)</string></property></item>
-        </widget>
-       </item>
-
        <item>
         <spacer name="topBar1Spacer">
          <property name="orientation">
-          <enum>Qt::Horizontal</enum>
+          <enum>Qt::Orientation::Horizontal</enum>
          </property>
          <property name="sizeHint" stdset="0">
           <size>
@@ -220,8 +198,6 @@
          </property>
         </spacer>
        </item>
-
-       <!-- Auto Explore -->
        <item>
         <widget class="QCheckBox" name="chkAutoExplore">
          <property name="text">
@@ -229,20 +205,15 @@
          </property>
         </widget>
        </item>
-
       </layout>
      </widget>
     </item>
-
-    <!-- ===================== -->
-    <!-- Top Bar 2 (filter + session quick + layers toggle) -->
-    <!-- ===================== -->
     <item>
      <widget class="QFrame" name="topBar2">
       <property name="minimumSize">
        <size>
         <width>0</width>
-        <height>36</height>
+        <height>40</height>
        </size>
       </property>
       <property name="maximumSize">
@@ -252,7 +223,7 @@
        </size>
       </property>
       <property name="frameShape">
-       <enum>QFrame::StyledPanel</enum>
+       <enum>QFrame::Shape::StyledPanel</enum>
       </property>
       <layout class="QHBoxLayout" name="topBar2Layout">
        <property name="spacing">
@@ -270,14 +241,12 @@
        <property name="bottomMargin">
         <number>3</number>
        </property>
-
-       <!-- Threshold enable is conceptually removed for Query: keep objectName but hide it -->
        <item>
         <widget class="QCheckBox" name="chkThrEnable">
-         <property name="visible">
+         <property name="enabled">
           <bool>false</bool>
          </property>
-         <property name="enabled">
+         <property name="visible">
           <bool>false</bool>
          </property>
          <property name="text">
@@ -285,74 +254,27 @@
          </property>
         </widget>
        </item>
-
-       <!-- SSID -->
        <item>
-        <widget class="QLabel" name="lblSsid">
-         <property name="text">
-          <string>SSID</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QComboBox" name="cbSsid">
-         <item><property name="text"><string>ALL</string></property></item>
-         <item><property name="text"><string>emba</string></property></item>
-         <item><property name="text"><string>hotspot</string></property></item>
-        </widget>
-       </item>
-
-       <!-- RSSI condition (always applied in Query) -->
-       <item>
-        <widget class="QLabel" name="lblRssiCond">
-         <property name="text">
-          <string>RSSI ≥</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QComboBox" name="cbThr">
-         <item><property name="text"><string>-40 dBm</string></property></item>
-         <item><property name="text"><string>-50 dBm</string></property></item>
-         <item><property name="text"><string>-60 dBm</string></property></item>
-         <item><property name="text"><string>-70 dBm</string></property></item>
-         <item><property name="text"><string>-80 dBm</string></property></item>
-         <property name="currentText">
-          <string>-60 dBm</string>
-         </property>
-        </widget>
-       </item>
-
-       <item>
-        <widget class="QPushButton" name="btnApplyFilter">
-         <property name="text">
-          <string>Apply</string>
-         </property>
-        </widget>
-       </item>
-
-       <item>
-        <spacer name="topBar2Spacer1">
-         <property name="orientation">
-          <enum>Qt::Horizontal</enum>
-         </property>
-         <property name="sizeHint" stdset="0">
+        <widget class="QComboBox" name="cbSessionId">
+         <property name="minimumSize">
           <size>
-           <width>40</width>
-           <height>20</height>
+           <width>315</width>
+           <height>0</height>
           </size>
          </property>
-        </spacer>
-       </item>
-
-       <!-- Session quick -->
-       <item>
-        <widget class="QComboBox" name="cbSessionId"/>
+        </widget>
        </item>
        <item>
         <widget class="QPushButton" name="btnSessionLoad">
          <property name="text">
           <string>Load</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="btnQueryClear">
+         <property name="text">
+          <string>Clear</string>
          </property>
         </widget>
        </item>
@@ -363,11 +285,10 @@
          </property>
         </widget>
        </item>
-
        <item>
         <spacer name="topBar2Spacer2">
          <property name="orientation">
-          <enum>Qt::Horizontal</enum>
+          <enum>Qt::Orientation::Horizontal</enum>
          </property>
          <property name="sizeHint" stdset="0">
           <size>
@@ -377,8 +298,6 @@
          </property>
         </spacer>
        </item>
-
-       <!-- Layers -->
        <item>
         <widget class="QCheckBox" name="chkShowHeatmap">
          <property name="text">
@@ -409,452 +328,408 @@
          </property>
         </widget>
        </item>
+       <item>
+        <widget class="QToolButton" name="btnAdmin">
+         <property name="text">
+          <string>Admin</string>
+         </property>
+         <property name="icon">
+          <iconset theme="QIcon::ThemeIcon::DocumentProperties"/>
+         </property>
+        </widget>
+       </item>
       </layout>
      </widget>
     </item>
-
-    <!-- ===================== -->
-    <!-- Main Area -->
-    <!-- ===================== -->
     <item>
-     <widget class="QWidget" name="contentArea">
-      <layout class="QHBoxLayout" name="horizontalLayoutRoot">
-       <property name="spacing">
-        <number>8</number>
-       </property>
-       <property name="leftMargin">
-        <number>0</number>
-       </property>
-       <property name="topMargin">
-        <number>0</number>
-       </property>
-       <property name="rightMargin">
-        <number>0</number>
-       </property>
-       <property name="bottomMargin">
-        <number>0</number>
-       </property>
-
-       <!-- Left panel -->
-       <item>
-        <widget class="QWidget" name="leftPanel">
-         <property name="minimumSize">
-          <size>
-           <width>340</width>
-           <height>0</height>
-          </size>
-         </property>
-         <layout class="QVBoxLayout" name="leftPanelLayout">
-          <property name="spacing">
-           <number>8</number>
-          </property>
-          <property name="leftMargin">
-           <number>0</number>
-          </property>
-          <property name="topMargin">
-           <number>0</number>
-          </property>
-          <property name="rightMargin">
-           <number>0</number>
-          </property>
-          <property name="bottomMargin">
-           <number>0</number>
-          </property>
-
-          <item>
-           <widget class="QStackedWidget" name="leftStack">
-            <property name="currentIndex">
-             <number>0</number>
-            </property>
-
-            <!-- Page 0: Mode -->
-            <widget class="QWidget" name="pageMode">
-             <layout class="QVBoxLayout" name="pageModeLayout">
-              <property name="spacing">
-               <number>8</number>
-              </property>
-              <item>
-               <widget class="QGroupBox" name="gbMode">
-                <property name="title">
-                 <string>Mode</string>
-                </property>
-                <layout class="QVBoxLayout" name="gbModeLayout">
-                 <item>
-                  <widget class="QRadioButton" name="rbModeView">
-                   <property name="text">
-                    <string>View</string>
-                   </property>
-                   <property name="checked">
-                    <bool>true</bool>
-                   </property>
-                  </widget>
-                 </item>
-                 <item>
-                  <widget class="QRadioButton" name="rbModeMeasure">
-                   <property name="text">
-                    <string>Measurement</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item>
-                  <widget class="QRadioButton" name="rbModeQuery">
-                   <property name="text">
-                    <string>Query</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item>
-                  <widget class="QRadioButton" name="rbModeSim">
-                   <property name="text">
-                    <string>AP Simulation</string>
-                   </property>
-                  </widget>
-                 </item>
-                </layout>
-               </widget>
-              </item>
-
-              <item>
-               <widget class="QGroupBox" name="gbMeasure">
-                <property name="title">
-                 <string>Measurement</string>
-                </property>
-                <layout class="QVBoxLayout" name="gbMeasureLayoutNew">
-                 <item>
-                  <widget class="QLabel" name="lblMeasureHint">
-                   <property name="text">
-                    <string>Start/Stop is a single toggle button on the top bar.</string>
-                   </property>
-                   <property name="wordWrap">
-                    <bool>true</bool>
-                   </property>
-                  </widget>
-                 </item>
-                </layout>
-               </widget>
-              </item>
-
-              <item>
-               <spacer name="pageModeSpacer">
-                <property name="orientation">
-                 <enum>Qt::Vertical</enum>
-                </property>
-                <property name="sizeHint" stdset="0">
-                 <size>
-                  <width>20</width>
-                  <height>40</height>
-                 </size>
-                </property>
-               </spacer>
-              </item>
-             </layout>
+     <layout class="QHBoxLayout" name="horizontalLayoutRoot">
+      <property name="spacing">
+       <number>8</number>
+      </property>
+      <property name="leftMargin">
+       <number>0</number>
+      </property>
+      <property name="topMargin">
+       <number>0</number>
+      </property>
+      <property name="rightMargin">
+       <number>0</number>
+      </property>
+      <property name="bottomMargin">
+       <number>0</number>
+      </property>
+      <item>
+       <widget class="QWidget" name="leftPanel_2" native="true">
+        <property name="maximumSize">
+         <size>
+          <width>420</width>
+          <height>16777215</height>
+         </size>
+        </property>
+        <layout class="QVBoxLayout" name="verticalLayout">
+         <item>
+          <layout class="QVBoxLayout" name="leftPanelLayout">
+           <property name="spacing">
+            <number>8</number>
+           </property>
+           <property name="leftMargin">
+            <number>0</number>
+           </property>
+           <property name="topMargin">
+            <number>0</number>
+           </property>
+           <property name="rightMargin">
+            <number>0</number>
+           </property>
+           <property name="bottomMargin">
+            <number>0</number>
+           </property>
+           <item>
+            <widget class="QStackedWidget" name="leftStack">
+             <property name="minimumSize">
+              <size>
+               <width>0</width>
+               <height>0</height>
+              </size>
+             </property>
+             <property name="baseSize">
+              <size>
+               <width>0</width>
+               <height>0</height>
+              </size>
+             </property>
+             <property name="frameShadow">
+              <enum>QFrame::Shadow::Plain</enum>
+             </property>
+             <property name="currentIndex">
+              <number>1</number>
+             </property>
+             <widget class="QWidget" name="pageSession">
+              <layout class="QVBoxLayout" name="pageSessionLayout">
+               <property name="spacing">
+                <number>8</number>
+               </property>
+               <item>
+                <widget class="QGroupBox" name="gbSession">
+                 <property name="title">
+                  <string>Session (DB)</string>
+                 </property>
+                 <layout class="QHBoxLayout" name="horizontalLayout_11">
+                  <item>
+                   <layout class="QGridLayout" name="gridLayout">
+                    <item row="0" column="0">
+                     <layout class="QVBoxLayout" name="verticalLayout_6">
+                      <item>
+                       <layout class="QHBoxLayout" name="horizontalLayout_9">
+                        <item>
+                         <widget class="QLabel" name="lblSsid">
+                          <property name="text">
+                           <string>SSID</string>
+                          </property>
+                         </widget>
+                        </item>
+                        <item>
+                         <widget class="QComboBox" name="cbSsid">
+                          <item>
+                           <property name="text">
+                            <string>ALL</string>
+                           </property>
+                          </item>
+                          <item>
+                           <property name="text">
+                            <string>emba</string>
+                           </property>
+                          </item>
+                          <item>
+                           <property name="text">
+                            <string>hotspot</string>
+                           </property>
+                          </item>
+                         </widget>
+                        </item>
+                       </layout>
+                      </item>
+                      <item>
+                       <layout class="QHBoxLayout" name="horizontalLayout_10">
+                        <item>
+                         <widget class="QLabel" name="lblRssiCond">
+                          <property name="text">
+                           <string>RSSI ≥</string>
+                          </property>
+                         </widget>
+                        </item>
+                        <item>
+                         <widget class="QComboBox" name="cbThr">
+                          <property name="currentText">
+                           <string>-40 dBm</string>
+                          </property>
+                          <item>
+                           <property name="text">
+                            <string>-40 dBm</string>
+                           </property>
+                          </item>
+                          <item>
+                           <property name="text">
+                            <string>-50 dBm</string>
+                           </property>
+                          </item>
+                          <item>
+                           <property name="text">
+                            <string>-60 dBm</string>
+                           </property>
+                          </item>
+                          <item>
+                           <property name="text">
+                            <string>-70 dBm</string>
+                           </property>
+                          </item>
+                          <item>
+                           <property name="text">
+                            <string>-80 dBm</string>
+                           </property>
+                          </item>
+                         </widget>
+                        </item>
+                       </layout>
+                      </item>
+                      <item>
+                       <widget class="QPushButton" name="btnApplyFilter">
+                        <property name="text">
+                         <string>Apply</string>
+                        </property>
+                       </widget>
+                      </item>
+                     </layout>
+                    </item>
+                   </layout>
+                  </item>
+                 </layout>
+                </widget>
+               </item>
+               <item>
+                <widget class="QGroupBox" name="groupBox">
+                 <property name="minimumSize">
+                  <size>
+                   <width>0</width>
+                   <height>20</height>
+                  </size>
+                 </property>
+                 <property name="title">
+                  <string/>
+                 </property>
+                 <widget class="QPushButton" name="btnSessionDelete">
+                  <property name="geometry">
+                   <rect>
+                    <x>10</x>
+                    <y>30</y>
+                    <width>356</width>
+                    <height>25</height>
+                   </rect>
+                  </property>
+                  <property name="text">
+                   <string>Delete</string>
+                  </property>
+                 </widget>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+             <widget class="QWidget" name="pageSim">
+              <layout class="QVBoxLayout" name="pageSimLayout">
+               <property name="spacing">
+                <number>8</number>
+               </property>
+               <item>
+                <widget class="QGroupBox" name="gbSim">
+                 <property name="title">
+                  <string>AP Simulation</string>
+                 </property>
+                 <layout class="QGridLayout" name="gbSimLayout">
+                  <item row="0" column="0" colspan="2">
+                   <widget class="QCheckBox" name="chkSimEnable">
+                    <property name="text">
+                     <string>Enable Sim Click</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="1" column="0">
+                   <widget class="QLabel" name="lblTxPower">
+                    <property name="text">
+                     <string>Tx Power (dBm)</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="1" column="1">
+                   <widget class="QDoubleSpinBox" name="spTxPower">
+                    <property name="minimum">
+                     <double>-90.000000000000000</double>
+                    </property>
+                    <property name="maximum">
+                     <double>-10.000000000000000</double>
+                    </property>
+                    <property name="value">
+                     <double>-40.000000000000000</double>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="2" column="0">
+                   <widget class="QLabel" name="lblSimChannel">
+                    <property name="text">
+                     <string>Channel</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="2" column="1">
+                   <widget class="QSpinBox" name="spSimChannel">
+                    <property name="minimum">
+                     <number>1</number>
+                    </property>
+                    <property name="maximum">
+                     <number>165</number>
+                    </property>
+                    <property name="value">
+                     <number>36</number>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="3" column="0">
+                   <widget class="QLabel" name="lblBandwidth">
+                    <property name="text">
+                     <string>Bandwidth</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="3" column="1">
+                   <widget class="QComboBox" name="cbSimBandwidth">
+                    <property name="currentText">
+                     <string>20</string>
+                    </property>
+                    <item>
+                     <property name="text">
+                      <string>20</string>
+                     </property>
+                    </item>
+                    <item>
+                     <property name="text">
+                      <string>40</string>
+                     </property>
+                    </item>
+                    <item>
+                     <property name="text">
+                      <string>80</string>
+                     </property>
+                    </item>
+                    <item>
+                     <property name="text">
+                      <string>160</string>
+                     </property>
+                    </item>
+                   </widget>
+                  </item>
+                  <item row="4" column="0" colspan="2">
+                   <widget class="QPushButton" name="btnClearPins">
+                    <property name="text">
+                     <string>Clear Pins</string>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
+                </widget>
+               </item>
+               <item>
+                <spacer name="pageSimSpacer">
+                 <property name="orientation">
+                  <enum>Qt::Orientation::Vertical</enum>
+                 </property>
+                 <property name="sizeHint" stdset="0">
+                  <size>
+                   <width>20</width>
+                   <height>40</height>
+                  </size>
+                 </property>
+                </spacer>
+               </item>
+              </layout>
+             </widget>
+             <widget class="QWidget" name="pageLayers">
+              <layout class="QVBoxLayout" name="pageLayersLayout">
+               <property name="spacing">
+                <number>8</number>
+               </property>
+               <item>
+                <widget class="QGroupBox" name="gbLayers">
+                 <property name="title">
+                  <string>Layers</string>
+                 </property>
+                 <layout class="QVBoxLayout" name="gbLayersLayoutNew">
+                  <item>
+                   <widget class="QLabel" name="lblLayersHint">
+                    <property name="text">
+                     <string>Layer toggles are on the top bar.</string>
+                    </property>
+                    <property name="wordWrap">
+                     <bool>true</bool>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
+                </widget>
+               </item>
+               <item>
+                <spacer name="pageLayersSpacer">
+                 <property name="orientation">
+                  <enum>Qt::Orientation::Vertical</enum>
+                 </property>
+                 <property name="sizeHint" stdset="0">
+                  <size>
+                   <width>20</width>
+                   <height>40</height>
+                  </size>
+                 </property>
+                </spacer>
+               </item>
+              </layout>
+             </widget>
             </widget>
-
-            <!-- Page 1: Session -->
-            <widget class="QWidget" name="pageSession">
-             <layout class="QVBoxLayout" name="pageSessionLayout">
-              <property name="spacing">
-               <number>8</number>
-              </property>
-              <item>
-               <widget class="QGroupBox" name="gbSession">
-                <property name="title">
-                 <string>Session (DB)</string>
-                </property>
-                <layout class="QVBoxLayout" name="gbSessionLayoutNew">
-                 <item>
-                  <widget class="QLabel" name="lblSessionHint">
-                   <property name="text">
-                    <string>Quick Load/Refresh and Session ID are on the top bar. Use Delete here if needed.</string>
-                   </property>
-                   <property name="wordWrap">
-                    <bool>true</bool>
-                   </property>
-                  </widget>
-                 </item>
-                 <item>
-                  <widget class="QPushButton" name="btnSessionDelete">
-                   <property name="text">
-                    <string>Delete</string>
-                   </property>
-                  </widget>
-                 </item>
-                </layout>
-               </widget>
-              </item>
-              <item>
-               <spacer name="pageSessionSpacer">
-                <property name="orientation">
-                 <enum>Qt::Vertical</enum>
-                </property>
-                <property name="sizeHint" stdset="0">
-                 <size>
-                  <width>20</width>
-                  <height>40</height>
-                 </size>
-                </property>
-               </spacer>
-              </item>
-             </layout>
-            </widget>
-
-            <!-- Page 2: Sim -->
-            <widget class="QWidget" name="pageSim">
-             <layout class="QVBoxLayout" name="pageSimLayout">
-              <property name="spacing">
-               <number>8</number>
-              </property>
-              <item>
-               <widget class="QGroupBox" name="gbSim">
-                <property name="title">
-                 <string>AP Simulation</string>
-                </property>
-                <layout class="QGridLayout" name="gbSimLayout">
-                 <item row="0" column="0" colspan="2">
-                  <widget class="QCheckBox" name="chkSimEnable">
-                   <property name="text">
-                    <string>Enable Sim Click</string>
-                   </property>
-                  </widget>
-                 </item>
-
-                 <item row="1" column="0">
-                  <widget class="QLabel" name="lblTxPower">
-                   <property name="text">
-                    <string>Tx Power (dBm)</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="1" column="1">
-                  <widget class="QDoubleSpinBox" name="spTxPower">
-                   <property name="minimum">
-                    <double>-90</double>
-                   </property>
-                   <property name="maximum">
-                    <double>-10</double>
-                   </property>
-                   <property name="value">
-                    <double>-40</double>
-                   </property>
-                  </widget>
-                 </item>
-
-                 <item row="2" column="0">
-                  <widget class="QLabel" name="lblSimChannel">
-                   <property name="text">
-                    <string>Channel</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="2" column="1">
-                  <widget class="QSpinBox" name="spSimChannel">
-                   <property name="minimum">
-                    <number>1</number>
-                   </property>
-                   <property name="maximum">
-                    <number>165</number>
-                   </property>
-                   <property name="value">
-                    <number>36</number>
-                   </property>
-                  </widget>
-                 </item>
-
-                 <item row="3" column="0">
-                  <widget class="QLabel" name="lblBandwidth">
-                   <property name="text">
-                    <string>Bandwidth</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="3" column="1">
-                  <widget class="QComboBox" name="cbSimBandwidth">
-                   <item><property name="text"><string>20</string></property></item>
-                   <item><property name="text"><string>40</string></property></item>
-                   <item><property name="text"><string>80</string></property></item>
-                   <item><property name="text"><string>160</string></property></item>
-                   <property name="currentText">
-                    <string>80</string>
-                   </property>
-                  </widget>
-                 </item>
-
-                 <item row="4" column="0" colspan="2">
-                  <widget class="QPushButton" name="btnClearPins">
-                   <property name="text">
-                    <string>Clear Pins</string>
-                   </property>
-                  </widget>
-                 </item>
-                </layout>
-               </widget>
-              </item>
-              <item>
-               <spacer name="pageSimSpacer">
-                <property name="orientation">
-                 <enum>Qt::Vertical</enum>
-                </property>
-                <property name="sizeHint" stdset="0">
-                 <size>
-                  <width>20</width>
-                  <height>40</height>
-                 </size>
-                </property>
-               </spacer>
-              </item>
-             </layout>
-            </widget>
-
-            <!-- Page 3: Metric -->
-            <widget class="QWidget" name="pageMetric">
-             <layout class="QVBoxLayout" name="pageMetricLayout">
-              <property name="spacing">
-               <number>8</number>
-              </property>
-
-              <item>
-               <widget class="QGroupBox" name="gbMetric">
-                <property name="title">
-                 <string>Metric</string>
-                </property>
-                <layout class="QVBoxLayout" name="gbMetricLayoutNew">
-                 <item>
-                  <widget class="QLabel" name="lblMetricHint">
-                   <property name="text">
-                    <string>Metric selection is on the top bar.</string>
-                   </property>
-                   <property name="wordWrap">
-                    <bool>true</bool>
-                   </property>
-                  </widget>
-                 </item>
-                </layout>
-               </widget>
-              </item>
-
-              <item>
-               <widget class="QGroupBox" name="gbFilter">
-                <property name="title">
-                 <string>Filter</string>
-                </property>
-                <layout class="QVBoxLayout" name="gbFilterLayoutNew">
-                 <item>
-                  <widget class="QLabel" name="lblFilterHint">
-                   <property name="text">
-                    <string>DB Query uses SSID + RSSI ≥ condition (always applied).</string>
-                   </property>
-                   <property name="wordWrap">
-                    <bool>true</bool>
-                   </property>
-                  </widget>
-                 </item>
-                </layout>
-               </widget>
-              </item>
-
-              <item>
-               <spacer name="pageMetricSpacer">
-                <property name="orientation">
-                 <enum>Qt::Vertical</enum>
-                </property>
-                <property name="sizeHint" stdset="0">
-                 <size>
-                  <width>20</width>
-                  <height>40</height>
-                 </size>
-                </property>
-               </spacer>
-              </item>
-             </layout>
-            </widget>
-
-            <!-- Page 4: Layers -->
-            <widget class="QWidget" name="pageLayers">
-             <layout class="QVBoxLayout" name="pageLayersLayout">
-              <property name="spacing">
-               <number>8</number>
-              </property>
-              <item>
-               <widget class="QGroupBox" name="gbLayers">
-                <property name="title">
-                 <string>Layers</string>
-                </property>
-                <layout class="QVBoxLayout" name="gbLayersLayoutNew">
-                 <item>
-                  <widget class="QLabel" name="lblLayersHint">
-                   <property name="text">
-                    <string>Layer toggles are on the top bar.</string>
-                   </property>
-                   <property name="wordWrap">
-                    <bool>true</bool>
-                   </property>
-                  </widget>
-                 </item>
-                </layout>
-               </widget>
-              </item>
-              <item>
-               <spacer name="pageLayersSpacer">
-                <property name="orientation">
-                 <enum>Qt::Vertical</enum>
-                </property>
-                <property name="sizeHint" stdset="0">
-                 <size>
-                  <width>20</width>
-                  <height>40</height>
-                 </size>
-                </property>
-               </spacer>
-              </item>
-             </layout>
-            </widget>
-
-           </widget>
-          </item>
-
-          <item>
-           <spacer name="verticalSpacerLeft">
-            <property name="orientation">
-             <enum>Qt::Vertical</enum>
-            </property>
-            <property name="sizeHint" stdset="0">
-             <size>
-              <width>20</width>
-              <height>10</height>
-             </size>
-            </property>
-           </spacer>
-          </item>
-
-         </layout>
-        </widget>
-       </item>
-
-       <!-- Main canvas -->
-       <item>
-        <widget class="QGraphicsView" name="graphicsView">
-         <property name="minimumSize">
-          <size>
-           <width>600</width>
-           <height>400</height>
-          </size>
-         </property>
-         <property name="frameShape">
-          <enum>QFrame::NoFrame</enum>
-         </property>
-         <property name="dragMode">
-          <enum>QGraphicsView::NoDrag</enum>
-         </property>
-        </widget>
-       </item>
-
-      </layout>
-     </widget>
+           </item>
+           <item>
+            <spacer name="verticalSpacerLeft">
+             <property name="orientation">
+              <enum>Qt::Orientation::Vertical</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>20</width>
+               <height>10</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+          </layout>
+         </item>
+        </layout>
+       </widget>
+      </item>
+      <item>
+       <widget class="QGraphicsView" name="graphicsView">
+        <property name="minimumSize">
+         <size>
+          <width>120</width>
+          <height>25</height>
+         </size>
+        </property>
+        <property name="frameShape">
+         <enum>QFrame::Shape::NoFrame</enum>
+        </property>
+        <property name="dragMode">
+         <enum>QGraphicsView::DragMode::NoDrag</enum>
+        </property>
+       </widget>
+      </item>
+     </layout>
     </item>
-
    </layout>
   </widget>
-
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
     <rect>
@@ -865,7 +740,6 @@
     </rect>
    </property>
   </widget>
-
   <widget class="QStatusBar" name="statusbar"/>
  </widget>
  <resources/>

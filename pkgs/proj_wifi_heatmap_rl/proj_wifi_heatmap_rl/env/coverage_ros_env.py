@@ -31,8 +31,7 @@ class RosCoverageConfig:
     # max_steps: int = 600
     # max_steps: int = 800
     # max_steps: int = 1000
-    # max_steps: int = 1200
-    max_steps: int = 1500
+    max_steps: int = 1200
     warmup_steps: int = 8
 
     # 충돌 판정

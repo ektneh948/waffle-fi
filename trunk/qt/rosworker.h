@@ -3,25 +3,19 @@
 
 #include <QThread>
 #include <QString>
-#include <vector>
+#include <mutex>
 
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp_action/rclcpp_action.hpp>
 
-#include <geometry_msgs/msg/transform_stamped.hpp>
-#include <geometry_msgs/msg/pose_stamped.hpp>
-#include <geometry_msgs/msg/pose_with_covariance_stamped.hpp>
-
-#include <nav_msgs/msg/occupancy_grid.hpp>
 #include <nav2_msgs/action/navigate_to_pose.hpp>
 
 #include <tf2_ros/buffer.h>
 #include <tf2_ros/transform_listener.h>
 #include <tf2/utils.h>
-#include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
 
+#include "wifi_interface/msg/wifi_fused.hpp"
 
-#include <mutex>
 
 class RosWorker : public QThread
 {
@@ -32,23 +26,37 @@ public:
 
 signals:
     void statusChanged(const QString &msg);
+
+    // Robot pose (meter in map frame)
     void robotPose(double x, double y, double yaw);
+
+    // (선택) test모드 dummy RSSI가 있으면 사용
     void sample(double x, double y, double yaw, float rssi);
 
-    //ui 목표 지점 설정
+    // UI goal status
     void goalStatus(const QString &msg);
 
+    // Live heatmap: from /wifi/fused (meter)
+    void fusedSample(double x_m, double y_m, const QString& ssid, int rssi);
+
+    // (옵션) gridPose를 쓴다면 유지
+    void gridPose(double gx, double gy);
+
+    // RL state arrived (현재는 단순 알림)
+    void rlStateArrived();
 
 protected:
     void run() override;
 
 private:
-    //ui 목표 지점 설정
     using NavigateToPose = nav2_msgs::action::NavigateToPose;
-    using GoalHandleNav = rclcpp_action::ClientGoalHandle<NavigateToPose>;
+    using GoalHandleNav  = rclcpp_action::ClientGoalHandle<NavigateToPose>;
 
+    // Nav2 action client
     rclcpp_action::Client<NavigateToPose>::SharedPtr nav_client_;
     std::shared_ptr<GoalHandleNav> active_goal_;
+
+    // TF
     std::unique_ptr<tf2_ros::Buffer> tf_buffer_;
     std::shared_ptr<tf2_ros::TransformListener> tf_listener_;
     rclcpp::TimerBase::SharedPtr pose_timer_;
@@ -56,12 +64,17 @@ private:
     bool have_pose_ = false;
     double last_x_ = 0.0, last_y_ = 0.0, last_yaw_ = 0.0;
 
-
+    // ROS node/executor
     rclcpp::Node::SharedPtr node_;
     rclcpp::executors::SingleThreadedExecutor exec_;
-    rclcpp::Subscription<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr amcl_sub_;
 
-    //pending goal storage (thread-safe)
+    // /wifi/fused subscription
+    rclcpp::Subscription<wifi_interface::msg::WifiFused>::SharedPtr fused_sub_;
+
+    // (옵션) grid topic subscription을 따로 쓰면 유지
+    // rclcpp::Subscription<geometry_msgs::msg::Point>::SharedPtr sub_grid_;
+
+    // pending goal storage (thread-safe)
     std::mutex goal_mtx_;
     bool goal_pending_ = false;
     double goal_x_ = 0.0;
@@ -69,4 +82,4 @@ private:
     double goal_yaw_ = 0.0;
 };
 
-#endif
+#endif // ROSWORKER_H

@@ -1,11 +1,13 @@
-QT += core gui widgets sql
+QT += core gui widgets
 CONFIG += c++17
 
 TEMPLATE = app
 TARGET = wifi_qt
 
 ROS_ROOT = /opt/ros/humble
+ROS_WS = $$(HOME)/turtlebot3_ws
 
+INCLUDEPATH += $$HOME/turtlebot3_ws/install/wifi_interface/include
 INCLUDEPATH += $$ROS_ROOT/include
 INCLUDEPATH += $$ROS_ROOT/include/rclcpp_action
 INCLUDEPATH += $$ROS_ROOT/include/rcl_action
@@ -15,15 +17,15 @@ INCLUDEPATH += $$ROS_ROOT/include/nav2_msgs
 INCLUDEPATH += $$PWD/3rdparty/QHeatMap/include
 SOURCES += $$PWD/3rdparty/QHeatMap/lib/*.cpp \
     autoexplorer.cpp \
-    dbmanager.cpp \
     heatlayer.cpp \
-    legendbarwidget.cpp
+    legendbarwidget.cpp \
+    mainwindow3.cpp
 HEADERS += $$PWD/3rdparty/QHeatMap/include/*.h \
     AppState.h \
     autoexplorer.h \
-    dbmanager.h \
     heatlayer.h \
-    legendbarwidget.h
+    legendbarwidget.h \
+    mainwindow3.h
 
 
 INCLUDEPATH += \
@@ -59,12 +61,25 @@ INCLUDEPATH += \
     $$ROS_ROOT/include/tf2_ros \
     $$ROS_ROOT/include/tf2_geometry_msgs
 
+#INCLUDEPATH += /home/ubuntu/turtlebot3_ws/install/wifi_interface/include/wifi_interface
+
+INCLUDEPATH += $$ROS_WS/install/wifi_interface/include/wifi_interface
+LIBS += -L$$ROS_WS/install/wifi_interface/lib \
+        -lwifi_interface__rosidl_typesupport_cpp \
+        -lrosidl_typesupport_cpp \
+        -lrosidl_runtime_c
+
+LIBS += -lrosidl_typesupport_cpp \
+        -lrosidl_runtime_c
+
 # 링크 옵션
 QMAKE_LFLAGS += -Wl,--no-as-needed
 QMAKE_LFLAGS += -Wl,-rpath,$$ROS_ROOT/lib
 
 
 LIBS += \
+    -L/usr/lib/x86_64-linux-gnu -lsqlite3 \
+    -lsqlite3 \
     -L$$ROS_ROOT/lib \
     -lrclcpp_action \
     -lrcl_action \
@@ -117,7 +132,6 @@ LIBS += \
     -lrosidl_runtime_c \
     -lrclcpp
 
-
 SOURCES += \
     main.cpp \
     mainwindow.cpp \
@@ -128,7 +142,15 @@ HEADERS += \
     rosworker.h
 
 FORMS += \
-    mainwindow.ui
+    mainwindow.ui \
+    mainwindow3.ui
 
+DISTFILES += \
+    icons/db-svgrepo-com.svg \
+    icons/icons8-cursor.svg \
+    icons/layer-group-svgrepo-com.svg \
+    icons/pin-svgrepo-com.svg \
+    icons/refresh-icon.svg
 
-
+RESOURCES += \
+    icons.qrc
