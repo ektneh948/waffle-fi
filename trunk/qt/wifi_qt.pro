@@ -1,4 +1,4 @@
-QT += core gui widgets sql
+QT += core gui widgets
 CONFIG += c++17
 
 TEMPLATE = app
@@ -6,6 +6,7 @@ TARGET = wifi_qt
 
 ROS_ROOT = /opt/ros/humble
 
+INCLUDEPATH += $$HOME/turtlebot3_ws/install/wifi_interface/include
 INCLUDEPATH += $$ROS_ROOT/include
 INCLUDEPATH += $$ROS_ROOT/include/rclcpp_action
 INCLUDEPATH += $$ROS_ROOT/include/rcl_action
@@ -14,17 +15,13 @@ INCLUDEPATH += $$ROS_ROOT/include/unique_identifier_msgs
 INCLUDEPATH += $$ROS_ROOT/include/nav2_msgs
 INCLUDEPATH += $$PWD/3rdparty/QHeatMap/include
 SOURCES += $$PWD/3rdparty/QHeatMap/lib/*.cpp \
-    admindialog.cpp \
     autoexplorer.cpp \
-    dbmanager.cpp \
     heatlayer.cpp \
     legendbarwidget.cpp \
     mainwindow3.cpp
 HEADERS += $$PWD/3rdparty/QHeatMap/include/*.h \
     AppState.h \
-    admindialog.h \
     autoexplorer.h \
-    dbmanager.h \
     heatlayer.h \
     legendbarwidget.h \
     mainwindow3.h
@@ -63,12 +60,21 @@ INCLUDEPATH += \
     $$ROS_ROOT/include/tf2_ros \
     $$ROS_ROOT/include/tf2_geometry_msgs
 
+#INCLUDEPATH += /home/ubuntu/turtlebot3_ws/install/wifi_interface/include/wifi_interface
+
+
 # 링크 옵션
 QMAKE_LFLAGS += -Wl,--no-as-needed
 QMAKE_LFLAGS += -Wl,-rpath,$$ROS_ROOT/lib
 
+LIBS += -L$$HOME/turtlebot3_ws/install/wifi_interface/lib \
+        -lwifi_interface__rosidl_typesupport_cpp \
+        -lrosidl_typesupport_cpp \
+        -lrosidl_runtime_c
 
 LIBS += \
+    -L/usr/lib/x86_64-linux-gnu -lsqlite3 \
+    -lsqlite3 \
     -L$$ROS_ROOT/lib \
     -lrclcpp_action \
     -lrcl_action \
@@ -121,6 +127,9 @@ LIBS += \
     -lrosidl_runtime_c \
     -lrclcpp
 
+LIBS += -L$$ROS_WS/install/wifi_interface/lib \
+        -lwifi_interface__rosidl_typesupport_cpp \
+        -lrosidl_typesupport_cpp -lrosidl_runtime_c
 
 SOURCES += \
     main.cpp \
@@ -144,6 +153,3 @@ DISTFILES += \
 
 RESOURCES += \
     icons.qrc
-
-
-

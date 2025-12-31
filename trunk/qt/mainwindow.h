@@ -10,10 +10,12 @@
 #include <QPointF>
 #include <QVector>
 #include <QSize>
+#include <QSet>
+#include <QDir>
+
 
 #include "rosworker.h"
 #include "autoexplorer.h"
-#include "dbmanager.h"
 #include "heatlayer.h"
 #include "heatmapper.h"
 #include "gradientpalette.h"
@@ -42,32 +44,52 @@ public:
     enum class Mode { View, Measurement, Query, SimAP };
 
 private slots:
-    void onApplyFilter();
+    // ROS
     void onRosStatus(const QString &msg);
     void onRobotPose(double x, double y, double yaw);
+
+    // dummy (선택: test 모드에서만 사용)
     void onSample(double x, double y, double yaw, float rssi);
+
+    // Live heatmap from /wifi/fused
+    void onFusedSample(double x_m, double y_m, const QString& ssid, int rssi);
+
+    // (옵션) gridPose를 쓰면 유지, 안 쓰면 제거 가능
+    void onGridPose(double gx, double gy);
+
+    // RL (현재는 수신 로그만)
+    void onRlStateArrived();
+
+    // Heatmap flush
     void flushHeatmap();
 
+    // UI toggles
     void onLayerHeatmap(bool on);
     void onLayerRobot(bool on);
     void onLayerPins(bool on);
 
     void onAutoExploreToggled(bool on);
 
+    // Snapshot Sessions
     void onSessionRefresh();
     void onSessionLoad();
     void onSessionDelete();
+    void on_btnSessionLoad_clicked();   // 오토슬롯
+    void onQueryClear();
 
+    // Start/Stop (live 누적 ON/OFF + Start 시 snapshot 생성)
     void onMeasureStart();
     void onMeasureStop();
-    void onSampleToDb(double x, double y, double yaw, float rssi);
 
+    // Filter
+    void onApplyFilter();
+
+    // Sim
     void onSimEnable(bool on);
     void onSimParamsChanged();
     void onClearPins();
 
-    void on_btnSessionLoad_clicked();   // ✅ 오토슬롯만 사용(중복호출 방지)
-    void onQueryClear();                // ✅ Clear 버튼
+    // Admin (비활성화됨)
     void onAdminClicked();
 
 protected:
@@ -98,8 +120,12 @@ private:
     float rssiToIntensity01(float rssi) const;
     int radiusPx() const;
 
-    // Query
-    void reloadQueryLayer(const QString& sessionId);
+    // Snapshot query (sqlite3 READONLY)
+    QString makeDbSnapshot();
+    void reloadQueryLayerFromSnapshot(const QString& snapshotPath);
+
+    // SSID combo live update
+    void updateSsidComboLive(const QString& ssid);
 
     // Sim
     struct SimPin { double x_m = 0.0; double y_m = 0.0; };
@@ -112,10 +138,7 @@ private:
     void updateLegendOverlayGeometry();
 
     int radiusPxLive() const;
-    int radiusPxSim() const;
     int simBrushRadiusPx() const;
-    float rssiToIntensity01_continuous(float rssi) const;
-
 
 private:
     Ui::MainWindow *ui = nullptr;
@@ -145,29 +168,36 @@ private:
     // UI/State
     Mode currentMode_ = Mode::View;
 
-    bool measuringDb_ = false;
-    QString activeSessionId_;
+    // ====== Snapshot 방식 상태 ======
+    QString sourceDbPath_ = "/home/ros/turtlebot3_ws/data/my_wifi.db";
+    QString snapshotDir_  = QDir::homePath() + "/wifi_qt_snapshots";
+    QString loadedSnapshotPath_;
 
-    QString currentLoadedSession_;
+    // Start/Stop → live heatmap 누적 ON/OFF
+    bool accumulating_ = false;
 
+    // Live SSID set
+    QSet<QString> ssidSetLive_;
+
+    // Filter
     QString filterSsid_ = "ALL";
-    bool filterThrEnable_ = false;
-    int filterThrRssi_ = -60;
+    bool filterThrEnable_ = true; // UI에서 chkThrEnable 숨김이므로 기본 true 추천
+    int filterThrRssi_ = -70;
 
+    // Sim
     bool simEnabled_ = false;
     double simTxPower_ = -40.0;
     int simChannel_ = 36;
     int simBandwidth_ = 80;
     QVector<SimPin> simPins_;
-
     QVector<QGraphicsItem*> apPins_;
 
+    // Nav / Auto explorer
     bool navBusy_ = false;
     AutoExplorer autoExplorer_;
 
-    DbManager db_;
-
+    // Legend
     LegendBarWidget* legendOverlay_ = nullptr;
 };
 
-#endif
+#endif // MAINWINDOW_H

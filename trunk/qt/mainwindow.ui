@@ -35,7 +35,7 @@
       <property name="minimumSize">
        <size>
         <width>0</width>
-        <height>42</height>
+        <height>60</height>
        </size>
       </property>
       <property name="maximumSize">
@@ -68,8 +68,20 @@
        </property>
        <item>
         <widget class="QToolButton" name="tbSession">
+         <property name="minimumSize">
+          <size>
+           <width>100</width>
+           <height>30</height>
+          </size>
+         </property>
          <property name="text">
           <string>Session</string>
+         </property>
+         <property name="iconSize">
+          <size>
+           <width>36</width>
+           <height>29</height>
+          </size>
          </property>
          <property name="checkable">
           <bool>true</bool>
@@ -84,6 +96,12 @@
        </item>
        <item>
         <widget class="QToolButton" name="tbSim">
+         <property name="minimumSize">
+          <size>
+           <width>100</width>
+           <height>30</height>
+          </size>
+         </property>
          <property name="text">
           <string>Sim</string>
          </property>
@@ -100,6 +118,12 @@
        </item>
        <item>
         <widget class="QToolButton" name="tbLayers">
+         <property name="minimumSize">
+          <size>
+           <width>100</width>
+           <height>30</height>
+          </size>
+         </property>
          <property name="text">
           <string>Layers</string>
          </property>
@@ -116,6 +140,12 @@
        </item>
        <item>
         <widget class="QFrame" name="vLine1">
+         <property name="minimumSize">
+          <size>
+           <width>50</width>
+           <height>0</height>
+          </size>
+         </property>
          <property name="frameShape">
           <enum>QFrame::Shape::VLine</enum>
          </property>
@@ -126,27 +156,32 @@
        </item>
        <item>
         <widget class="QPushButton" name="btnMeasureStart">
+         <property name="minimumSize">
+          <size>
+           <width>300</width>
+           <height>30</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>16777215</width>
+           <height>16777215</height>
+          </size>
+         </property>
          <property name="text">
           <string>Start</string>
+         </property>
+         <property name="iconSize">
+          <size>
+           <width>16</width>
+           <height>16</height>
+          </size>
          </property>
          <property name="checkable">
           <bool>true</bool>
          </property>
          <property name="checked">
           <bool>false</bool>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QPushButton" name="btnMeasureStop">
-         <property name="enabled">
-          <bool>false</bool>
-         </property>
-         <property name="visible">
-          <bool>false</bool>
-         </property>
-         <property name="text">
-          <string>Stop</string>
          </property>
         </widget>
        </item>
@@ -178,7 +213,7 @@
       <property name="minimumSize">
        <size>
         <width>0</width>
-        <height>36</height>
+        <height>40</height>
        </size>
       </property>
       <property name="maximumSize">
@@ -220,92 +255,14 @@
         </widget>
        </item>
        <item>
-        <widget class="QLabel" name="lblSsid">
-         <property name="text">
-          <string>SSID</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QComboBox" name="cbSsid">
-         <item>
-          <property name="text">
-           <string>ALL</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>emba</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>hotspot</string>
-          </property>
-         </item>
-        </widget>
-       </item>
-       <item>
-        <widget class="QLabel" name="lblRssiCond">
-         <property name="text">
-          <string>RSSI ≥</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QComboBox" name="cbThr">
-         <property name="currentText">
-          <string>-40 dBm</string>
-         </property>
-         <item>
-          <property name="text">
-           <string>-40 dBm</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>-50 dBm</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>-60 dBm</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>-70 dBm</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>-80 dBm</string>
-          </property>
-         </item>
-        </widget>
-       </item>
-       <item>
-        <widget class="QPushButton" name="btnApplyFilter">
-         <property name="text">
-          <string>Apply</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <spacer name="topBar2Spacer1">
-         <property name="orientation">
-          <enum>Qt::Orientation::Horizontal</enum>
-         </property>
-         <property name="sizeHint" stdset="0">
+        <widget class="QComboBox" name="cbSessionId">
+         <property name="minimumSize">
           <size>
-           <width>40</width>
-           <height>20</height>
+           <width>315</width>
+           <height>0</height>
           </size>
          </property>
-        </spacer>
-       </item>
-       <item>
-        <widget class="QComboBox" name="cbSessionId"/>
+        </widget>
        </item>
        <item>
         <widget class="QPushButton" name="btnSessionLoad">
@@ -342,13 +299,6 @@
         </spacer>
        </item>
        <item>
-        <widget class="QToolButton" name="btnAdmin">
-         <property name="text">
-          <string>Admin</string>
-         </property>
-        </widget>
-       </item>
-       <item>
         <widget class="QCheckBox" name="chkShowHeatmap">
          <property name="text">
           <string>Heatmap</string>
@@ -375,6 +325,16 @@
          </property>
          <property name="checked">
           <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QToolButton" name="btnAdmin">
+         <property name="text">
+          <string>Admin</string>
+         </property>
+         <property name="icon">
+          <iconset theme="QIcon::ThemeIcon::DocumentProperties"/>
          </property>
         </widget>
        </item>
@@ -426,6 +386,21 @@
            </property>
            <item>
             <widget class="QStackedWidget" name="leftStack">
+             <property name="minimumSize">
+              <size>
+               <width>0</width>
+               <height>0</height>
+              </size>
+             </property>
+             <property name="baseSize">
+              <size>
+               <width>0</width>
+               <height>0</height>
+              </size>
+             </property>
+             <property name="frameShadow">
+              <enum>QFrame::Shadow::Plain</enum>
+             </property>
              <property name="currentIndex">
               <number>1</number>
              </property>
@@ -439,39 +414,123 @@
                  <property name="title">
                   <string>Session (DB)</string>
                  </property>
-                 <layout class="QVBoxLayout" name="gbSessionLayoutNew">
+                 <layout class="QHBoxLayout" name="horizontalLayout_11">
                   <item>
-                   <widget class="QLabel" name="lblSessionHint">
-                    <property name="text">
-                     <string>Quick Load/Refresh and Session ID are on the top bar. Use Delete here if needed.</string>
-                    </property>
-                    <property name="wordWrap">
-                     <bool>true</bool>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QPushButton" name="btnSessionDelete">
-                    <property name="text">
-                     <string>Delete</string>
-                    </property>
-                   </widget>
+                   <layout class="QGridLayout" name="gridLayout">
+                    <item row="0" column="0">
+                     <layout class="QVBoxLayout" name="verticalLayout_6">
+                      <item>
+                       <layout class="QHBoxLayout" name="horizontalLayout_9">
+                        <item>
+                         <widget class="QLabel" name="lblSsid">
+                          <property name="text">
+                           <string>SSID</string>
+                          </property>
+                         </widget>
+                        </item>
+                        <item>
+                         <widget class="QComboBox" name="cbSsid">
+                          <item>
+                           <property name="text">
+                            <string>ALL</string>
+                           </property>
+                          </item>
+                          <item>
+                           <property name="text">
+                            <string>emba</string>
+                           </property>
+                          </item>
+                          <item>
+                           <property name="text">
+                            <string>hotspot</string>
+                           </property>
+                          </item>
+                         </widget>
+                        </item>
+                       </layout>
+                      </item>
+                      <item>
+                       <layout class="QHBoxLayout" name="horizontalLayout_10">
+                        <item>
+                         <widget class="QLabel" name="lblRssiCond">
+                          <property name="text">
+                           <string>RSSI ≥</string>
+                          </property>
+                         </widget>
+                        </item>
+                        <item>
+                         <widget class="QComboBox" name="cbThr">
+                          <property name="currentText">
+                           <string>-40 dBm</string>
+                          </property>
+                          <item>
+                           <property name="text">
+                            <string>-40 dBm</string>
+                           </property>
+                          </item>
+                          <item>
+                           <property name="text">
+                            <string>-50 dBm</string>
+                           </property>
+                          </item>
+                          <item>
+                           <property name="text">
+                            <string>-60 dBm</string>
+                           </property>
+                          </item>
+                          <item>
+                           <property name="text">
+                            <string>-70 dBm</string>
+                           </property>
+                          </item>
+                          <item>
+                           <property name="text">
+                            <string>-80 dBm</string>
+                           </property>
+                          </item>
+                         </widget>
+                        </item>
+                       </layout>
+                      </item>
+                      <item>
+                       <widget class="QPushButton" name="btnApplyFilter">
+                        <property name="text">
+                         <string>Apply</string>
+                        </property>
+                       </widget>
+                      </item>
+                     </layout>
+                    </item>
+                   </layout>
                   </item>
                  </layout>
                 </widget>
                </item>
                <item>
-                <spacer name="pageSessionSpacer">
-                 <property name="orientation">
-                  <enum>Qt::Orientation::Vertical</enum>
-                 </property>
-                 <property name="sizeHint" stdset="0">
+                <widget class="QGroupBox" name="groupBox">
+                 <property name="minimumSize">
                   <size>
-                   <width>20</width>
-                   <height>40</height>
+                   <width>0</width>
+                   <height>20</height>
                   </size>
                  </property>
-                </spacer>
+                 <property name="title">
+                  <string/>
+                 </property>
+                 <widget class="QPushButton" name="btnSessionDelete">
+                  <property name="geometry">
+                   <rect>
+                    <x>10</x>
+                    <y>30</y>
+                    <width>356</width>
+                    <height>25</height>
+                   </rect>
+                  </property>
+                  <property name="text">
+                   <string>Delete</string>
+                  </property>
+                 </widget>
+                </widget>
                </item>
               </layout>
              </widget>
@@ -655,8 +714,8 @@
        <widget class="QGraphicsView" name="graphicsView">
         <property name="minimumSize">
          <size>
-          <width>600</width>
-          <height>400</height>
+          <width>120</width>
+          <height>25</height>
          </size>
         </property>
         <property name="frameShape">
