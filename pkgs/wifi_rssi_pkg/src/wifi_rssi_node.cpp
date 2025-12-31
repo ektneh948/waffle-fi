@@ -3,8 +3,6 @@
 #include <array>
 #include <cerrno>
 #include <cstring>
-#include <sstream>
-#include <limits>
 
 #include <fcntl.h>
 #include <unistd.h>
@@ -18,11 +16,9 @@ using namespace std::chrono_literals;
 static constexpr const char* SERIAL_PORT = "/dev/serial0";
 static constexpr int SERIAL_BAUD = 115200;
 static constexpr const char* TOPIC_WIFI_RAW = "/wifi/raw";
-static constexpr const char* DRIVER_PATH = "/dev/rssi_driver_table_test";
 
 static constexpr int TIMER_PERIOD_MS = 20;
 static constexpr size_t READ_CHUNK = 4096;
-static constexpr size_t MAX_BUFFER_BYTES = 300000;
 
 static speed_t to_speed_t(int baud)
 {
@@ -41,12 +37,12 @@ class WifiRssiNode : public rclcpp::Node
 {
 public:
   WifiRssiNode()
-  : Node("wifi_rssi_node"), serial_fd_(-1), drv_fd_(-1)
+  : Node("wifi_rssi_node"), serial_fd_(-1), in_frame_(false)
   {
-    pub_ = create_publisher<wifi_interface::msg::WifiRssi>(TOPIC_WIFI_RAW, 10);
+    pub_ = create_publisher<wifi_interface::msg::WifiRssi>(
+      TOPIC_WIFI_RAW, 10);
 
     open_serial();
-    open_driver();
 
     timer_ = create_wall_timer(
       std::chrono::milliseconds(TIMER_PERIOD_MS),
@@ -58,18 +54,17 @@ public:
 
   ~WifiRssiNode() override
   {
-    if (serial_fd_ >= 0) ::close(serial_fd_);
-    if (drv_fd_ >= 0) ::close(drv_fd_);
+    if (serial_fd_ >= 0)
+      ::close(serial_fd_);
   }
 
 private:
   void open_serial()
   {
-    if (serial_fd_ >= 0) return;
-
     serial_fd_ = ::open(SERIAL_PORT, O_RDONLY | O_NOCTTY | O_NONBLOCK);
     if (serial_fd_ < 0) {
-      RCLCPP_ERROR(get_logger(), "serial open failed: %s", std::strerror(errno));
+      RCLCPP_ERROR(get_logger(),
+        "serial open failed: %s", std::strerror(errno));
       return;
     }
 
@@ -94,102 +89,91 @@ private:
     tcsetattr(serial_fd_, TCSANOW, &tio);
   }
 
-  void open_driver()
-  {
-    drv_fd_ = ::open(DRIVER_PATH, O_WRONLY | O_NONBLOCK);
-  }
-
   void tick()
   {
     std::array<char, READ_CHUNK> buf{};
-    ssize_t n = ::read(serial_fd_, buf.data(), buf.size() - 1);
+    ssize_t n = ::read(serial_fd_, buf.data(), buf.size());
 
-    if (n <= 0) return;
+    if (n <= 0)
+      return;
 
-    buf[n] = '\0';
-    rx_acc_ += buf.data();
-
-    if (rx_acc_.size() > MAX_BUFFER_BYTES) {
-      rx_acc_.erase(0, rx_acc_.size() / 2);
-    }
-
-    publish_complete_frames();
+    process_stream(buf.data(), n);
   }
 
-  void publish_complete_frames()
+  // ===== 스트림 처리 핵심 =====
+  void process_stream(const char* data, size_t len)
   {
-    while (true) {
-      size_t b = rx_acc_.find("BEGIN\n");
-      size_t e = rx_acc_.find("END\n");
+    for (size_t i = 0; i < len; ++i) {
+      char c = data[i];
 
-      if (b == std::string::npos || e == std::string::npos || e < b)
-        return;
-
-      size_t end_pos = e + 4;
-      std::string frame = rx_acc_.substr(b + 6, e - (b + 6));
-      rx_acc_.erase(0, end_pos);
-
-      parse_and_publish(frame);
-    }
-  }
-
-  void parse_and_publish(const std::string& frame)
-  {
-    std::istringstream iss(frame);
-    std::string line;
-
-    int best_rssi = std::numeric_limits<int>::min();
-    std::string best_ssid = "UNKNOWN";
-
-    while (std::getline(iss, line)) {
-      if (line.empty()) continue;
-
-      // 기대 포맷: SSID:xxx,RSSI:-45
-      size_t ssid_pos = line.find("SSID:");
-      size_t rssi_pos = line.find(",RSSI:");
-
-      if (ssid_pos == std::string::npos || rssi_pos == std::string::npos)
-        continue;
-
-      std::string ssid = line.substr(
-        ssid_pos + 5,
-        rssi_pos - (ssid_pos + 5)
-      );
-
-      int rssi = std::stoi(
-        line.substr(rssi_pos + 6)
-      );
-
-      if (rssi > best_rssi) {
-        best_rssi = rssi;
-        best_ssid = ssid;
+      if (c == '\n') {
+        handle_line(line_buf_);
+        line_buf_.clear();
+      }
+      else if (c != '\r') {
+        line_buf_ += c;
       }
     }
+  }
+
+  void handle_line(const std::string& line)
+  {
+    if (line.empty())
+      return;
+
+    // BEGIN
+    if (line.find("BEGIN") != std::string::npos) {
+      in_frame_ = true;
+      RCLCPP_DEBUG(get_logger(), "BEGIN detected");
+      return;
+    }
+
+    // END
+    if (line.find("END") != std::string::npos) {
+      in_frame_ = false;
+      RCLCPP_DEBUG(get_logger(), "END detected");
+      return;
+    }
+
+    if (!in_frame_)
+      return;
+
+    // 기대 포맷: SSID:xxx,RSSI:-45
+    size_t ssid_pos = line.find("SSID:");
+    size_t rssi_pos = line.find("RSSI:");
+
+    if (ssid_pos == std::string::npos ||
+        rssi_pos == std::string::npos)
+      return;
+
+    std::string ssid = line.substr(
+      ssid_pos + 5,
+      rssi_pos - (ssid_pos + 5)
+    );
+
+    int rssi = std::stoi(
+      line.substr(rssi_pos + 5)
+    );
 
     wifi_interface::msg::WifiRssi msg;
     msg.header.stamp = now();
     msg.header.frame_id = "wifi";
-    msg.ssid = best_ssid;
-    msg.rssi = best_rssi;
+    msg.ssid = ssid;
+    msg.rssi = rssi;
 
     pub_->publish(msg);
-
-    RCLCPP_INFO_THROTTLE(
-      get_logger(), *get_clock(), 2000,
-      "WiFi strongest: %s (%d dBm)",
-      best_ssid.c_str(), best_rssi
-    );
   }
 
 private:
   int serial_fd_;
-  int drv_fd_;
+  bool in_frame_;
+  std::string line_buf_;
+
   rclcpp::TimerBase::SharedPtr timer_;
   rclcpp::Publisher<wifi_interface::msg::WifiRssi>::SharedPtr pub_;
-  std::string rx_acc_;
 };
 
-int main(int argc, char * argv[])
+int main(int argc, char* argv[])
 {
   rclcpp::init(argc, argv);
   rclcpp::spin(std::make_shared<WifiRssiNode>());
