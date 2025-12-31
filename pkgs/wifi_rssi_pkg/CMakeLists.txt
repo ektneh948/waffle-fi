@@ -7,12 +7,19 @@ endif()
 
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
-find_package(custom_interfaces REQUIRED)
+find_package(wifi_interface REQUIRED)
 
-add_executable(wifi_rssi_node src/wifi_rssi_node.cpp)
-ament_target_dependencies(wifi_rssi_node rclcpp custom_interfaces)
+add_executable(wifi_rssi_node
+  src/wifi_rssi_node.cpp
+)
 
-install(TARGETS wifi_rssi_node
+ament_target_dependencies(wifi_rssi_node
+  rclcpp
+  wifi_interface
+)
+
+install(TARGETS
+  wifi_rssi_node
   DESTINATION lib/${PROJECT_NAME}
 )
 
