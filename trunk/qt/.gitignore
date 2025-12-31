@@ -1,3 +1,4 @@
 .qtcreator/
 *.autosave
 *.user
+.qmake.stash

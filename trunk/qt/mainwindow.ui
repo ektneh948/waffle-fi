@@ -67,22 +67,6 @@
         <number>4</number>
        </property>
        <item>
-        <widget class="QToolButton" name="tbMode">
-         <property name="text">
-          <string>Mode</string>
-         </property>
-         <property name="checkable">
-          <bool>true</bool>
-         </property>
-         <property name="autoExclusive">
-          <bool>true</bool>
-         </property>
-         <property name="toolButtonStyle">
-          <enum>Qt::ToolButtonStyle::ToolButtonTextUnderIcon</enum>
-         </property>
-        </widget>
-       </item>
-       <item>
         <widget class="QToolButton" name="tbSession">
          <property name="text">
           <string>Session</string>
@@ -102,22 +86,6 @@
         <widget class="QToolButton" name="tbSim">
          <property name="text">
           <string>Sim</string>
-         </property>
-         <property name="checkable">
-          <bool>true</bool>
-         </property>
-         <property name="autoExclusive">
-          <bool>true</bool>
-         </property>
-         <property name="toolButtonStyle">
-          <enum>Qt::ToolButtonStyle::ToolButtonTextUnderIcon</enum>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QToolButton" name="tbMetric">
-         <property name="text">
-          <string>Metric</string>
          </property>
          <property name="checkable">
           <bool>true</bool>
@@ -180,35 +148,6 @@
          <property name="text">
           <string>Stop</string>
          </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QComboBox" name="cbMetric">
-         <item>
-          <property name="text">
-           <string>RSSI</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>SNR</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>AP Count</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>Interference/Noise</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>Throughput(Max)</string>
-          </property>
-         </item>
         </widget>
        </item>
        <item>
@@ -376,6 +315,13 @@
         </widget>
        </item>
        <item>
+        <widget class="QPushButton" name="btnQueryClear">
+         <property name="text">
+          <string>Clear</string>
+         </property>
+        </widget>
+       </item>
+       <item>
         <widget class="QPushButton" name="btnSessionRefresh">
          <property name="text">
           <string>Refresh</string>
@@ -394,6 +340,13 @@
           </size>
          </property>
         </spacer>
+       </item>
+       <item>
+        <widget class="QToolButton" name="btnAdmin">
+         <property name="text">
+          <string>Admin</string>
+         </property>
+        </widget>
        </item>
        <item>
         <widget class="QCheckBox" name="chkShowHeatmap">
@@ -447,6 +400,12 @@
       </property>
       <item>
        <widget class="QWidget" name="leftPanel_2" native="true">
+        <property name="maximumSize">
+         <size>
+          <width>420</width>
+          <height>16777215</height>
+         </size>
+        </property>
         <layout class="QVBoxLayout" name="verticalLayout">
          <item>
           <layout class="QVBoxLayout" name="leftPanelLayout">
@@ -470,85 +429,6 @@
              <property name="currentIndex">
               <number>1</number>
              </property>
-             <widget class="QWidget" name="pageMode">
-              <layout class="QVBoxLayout" name="pageModeLayout">
-               <property name="spacing">
-                <number>8</number>
-               </property>
-               <item>
-                <widget class="QGroupBox" name="gbMode">
-                 <property name="title">
-                  <string>Mode</string>
-                 </property>
-                 <layout class="QVBoxLayout" name="gbModeLayout">
-                  <item>
-                   <widget class="QRadioButton" name="rbModeView">
-                    <property name="text">
-                     <string>View</string>
-                    </property>
-                    <property name="checked">
-                     <bool>true</bool>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QRadioButton" name="rbModeMeasure">
-                    <property name="text">
-                     <string>Measurement</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QRadioButton" name="rbModeQuery">
-                    <property name="text">
-                     <string>Query</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QRadioButton" name="rbModeSim">
-                    <property name="text">
-                     <string>AP Simulation</string>
-                    </property>
-                   </widget>
-                  </item>
-                 </layout>
-                </widget>
-               </item>
-               <item>
-                <widget class="QGroupBox" name="gbMeasure">
-                 <property name="title">
-                  <string>Measurement</string>
-                 </property>
-                 <layout class="QVBoxLayout" name="gbMeasureLayoutNew">
-                  <item>
-                   <widget class="QLabel" name="lblMeasureHint">
-                    <property name="text">
-                     <string>Start/Stop is a single toggle button on the top bar.</string>
-                    </property>
-                    <property name="wordWrap">
-                     <bool>true</bool>
-                    </property>
-                   </widget>
-                  </item>
-                 </layout>
-                </widget>
-               </item>
-               <item>
-                <spacer name="pageModeSpacer">
-                 <property name="orientation">
-                  <enum>Qt::Orientation::Vertical</enum>
-                 </property>
-                 <property name="sizeHint" stdset="0">
-                  <size>
-                   <width>20</width>
-                   <height>40</height>
-                  </size>
-                 </property>
-                </spacer>
-               </item>
-              </layout>
-             </widget>
              <widget class="QWidget" name="pageSession">
               <layout class="QVBoxLayout" name="pageSessionLayout">
                <property name="spacing">
@@ -699,64 +579,6 @@
                </item>
                <item>
                 <spacer name="pageSimSpacer">
-                 <property name="orientation">
-                  <enum>Qt::Orientation::Vertical</enum>
-                 </property>
-                 <property name="sizeHint" stdset="0">
-                  <size>
-                   <width>20</width>
-                   <height>40</height>
-                  </size>
-                 </property>
-                </spacer>
-               </item>
-              </layout>
-             </widget>
-             <widget class="QWidget" name="pageMetric">
-              <layout class="QVBoxLayout" name="pageMetricLayout">
-               <property name="spacing">
-                <number>8</number>
-               </property>
-               <item>
-                <widget class="QGroupBox" name="gbMetric">
-                 <property name="title">
-                  <string>Metric</string>
-                 </property>
-                 <layout class="QVBoxLayout" name="gbMetricLayoutNew">
-                  <item>
-                   <widget class="QLabel" name="lblMetricHint">
-                    <property name="text">
-                     <string>Metric selection is on the top bar.</string>
-                    </property>
-                    <property name="wordWrap">
-                     <bool>true</bool>
-                    </property>
-                   </widget>
-                  </item>
-                 </layout>
-                </widget>
-               </item>
-               <item>
-                <widget class="QGroupBox" name="gbFilter">
-                 <property name="title">
-                  <string>Filter</string>
-                 </property>
-                 <layout class="QVBoxLayout" name="gbFilterLayoutNew">
-                  <item>
-                   <widget class="QLabel" name="lblFilterHint">
-                    <property name="text">
-                     <string>DB Query uses SSID + RSSI ≥ condition (always applied).</string>
-                    </property>
-                    <property name="wordWrap">
-                     <bool>true</bool>
-                    </property>
-                   </widget>
-                  </item>
-                 </layout>
-                </widget>
-               </item>
-               <item>
-                <spacer name="pageMetricSpacer">
                  <property name="orientation">
                   <enum>Qt::Orientation::Vertical</enum>
                  </property>

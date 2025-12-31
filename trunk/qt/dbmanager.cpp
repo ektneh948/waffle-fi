@@ -121,7 +121,6 @@ bool DbManager::deleteSession(const QString& sessionId) {
     return true;
 }
 
-// Step4용(지금은 미사용이어도 OK)
 QString DbManager::beginSession() {
     const QString sid = QUuid::createUuid().toString(QUuid::WithoutBraces);
     const QString now = QDateTime::currentDateTime().toString(Qt::ISODate);
@@ -131,6 +130,8 @@ QString DbManager::beginSession() {
     if (!q.exec()) return {};
     return sid;
 }
+
+
 bool DbManager::endSession(const QString&) { return true; }
 bool DbManager::insertSample(const QString& sessionId, const SampleRow& s)
 {

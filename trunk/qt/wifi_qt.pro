@@ -14,6 +14,7 @@ INCLUDEPATH += $$ROS_ROOT/include/unique_identifier_msgs
 INCLUDEPATH += $$ROS_ROOT/include/nav2_msgs
 INCLUDEPATH += $$PWD/3rdparty/QHeatMap/include
 SOURCES += $$PWD/3rdparty/QHeatMap/lib/*.cpp \
+    admindialog.cpp \
     autoexplorer.cpp \
     dbmanager.cpp \
     heatlayer.cpp \
@@ -21,6 +22,7 @@ SOURCES += $$PWD/3rdparty/QHeatMap/lib/*.cpp \
     mainwindow3.cpp
 HEADERS += $$PWD/3rdparty/QHeatMap/include/*.h \
     AppState.h \
+    admindialog.h \
     autoexplorer.h \
     dbmanager.h \
     heatlayer.h \
