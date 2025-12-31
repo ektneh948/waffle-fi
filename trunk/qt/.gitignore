@@ -2,3 +2,7 @@
 *.autosave
 *.user
 .qmake.stash
+
+# qt 터틀봇에서 make시 생기는 파일
+moc_*
+ui_mainwindow.h
