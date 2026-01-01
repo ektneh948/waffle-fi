@@ -7,6 +7,7 @@ endif()
 
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
+find_package(std_srvs REQUIRED)
 find_package(wifi_interface REQUIRED)
 
 add_executable(wifi_db_node
@@ -15,6 +16,7 @@ add_executable(wifi_db_node
 
 ament_target_dependencies(wifi_db_node
   rclcpp
+  std_srvs
   wifi_interface
 )
 
