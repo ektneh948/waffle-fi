@@ -8,6 +8,7 @@ find_package(std_msgs REQUIRED)
 rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/WifiRssi.msg"
   "msg/WifiFused.msg"
+  "srv/GetHeatmap.srv"
   DEPENDENCIES std_msgs
 )
 

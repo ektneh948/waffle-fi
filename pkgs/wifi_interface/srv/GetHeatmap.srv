@@ -1,0 +1,15 @@
+string session_id
+string ssid
+bool thr_enable
+int32 thr_rssi
+uint32 limit
+uint32 offset
+---
+bool ok
+string message
+float64[] xs
+float64[] ys
+int32[] rssis
+string[] ssids
+string[] stamps
+
