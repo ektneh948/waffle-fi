@@ -94,6 +94,7 @@ signals:
 
     // Nav status
     void goalStatus(const QString& msg);
+    void servicesReady();
 
 protected:
     void run() override;

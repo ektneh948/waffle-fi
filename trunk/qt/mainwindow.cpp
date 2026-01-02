@@ -155,6 +155,11 @@ MainWindow::MainWindow(QWidget *parent)
     connect(rosThread, &RosWorker::heatmapReplyArrived, this, &MainWindow::onHeatmapReplyArrived);
     connect(rosThread, &RosWorker::listSessionsReply, this, &MainWindow::onListSessionsReply);
     connect(rosThread, &RosWorker::listSsidsReply, this, &MainWindow::onListSsidsReply);
+    connect(rosThread, &RosWorker::servicesReady, this, [this](){
+        onSessionRefresh();
+    });
+    connect(rosThread, &RosWorker::deleteSessionReply,
+            this, &MainWindow::onDeleteSessionReply);
 
     rosThread->start();
 
@@ -164,6 +169,17 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->chkShowApPins,  &QCheckBox::toggled, this, &MainWindow::onLayerPins);
 
     connect(ui->btnApplyFilter, &QPushButton::clicked, this, &MainWindow::onApplyFilter);
+
+    connect(ui->btnSessionDelete, &QPushButton::clicked, this, [this](){
+        if (!rosThread) return;
+        const QString sid = currentSessionIdText();
+        if (sid.isEmpty() || sid.startsWith("(")) {
+            statusBar()->showMessage("Delete failed: invalid session_id", 2000);
+            return;
+        }
+        rosThread->requestDeleteSession(sid);
+    });
+
 
     // Start/Stop toggle (버튼 눌림 유지 방지)
     if (ui->btnMeasureStart) {
@@ -184,18 +200,20 @@ MainWindow::MainWindow(QWidget *parent)
     }
 
     // 세션 콤보 변경 시 ListSsid 호출
-    if (ui->cbSessionId) {
-        connect(ui->cbSessionId,
-                QOverload<int>::of(&QComboBox::currentIndexChanged),
-                this,
-                &MainWindow::onSessionComboChanged);
-    }
+    // if (ui->cbSessionId) {
+    //     connect(ui->cbSessionId,
+    //             QOverload<int>::of(&QComboBox::currentIndexChanged),
+    //             this,
+    //             &MainWindow::onSessionComboChanged);
+    // }
+    connect(ui->cbSessionId, QOverload<int>::of(&QComboBox::currentIndexChanged),
+            this, &MainWindow::onSessionComboChanged);
 
 
     updateUiByContext();
 
     // 앱 시작 시 자동 refresh
-    QTimer::singleShot(0, this, [this](){ onSessionRefresh(); });
+    QTimer::singleShot(800, this, [this](){ onSessionRefresh(); });
 }
 
 MainWindow::~MainWindow()
@@ -354,77 +372,6 @@ void MainWindow::applyViewTransform()
 
     v->setTransform(t, false);
 }
-
-
-
-// void MainWindow::applyViewTransform()
-// {
-//     if (!ui->graphicsView || !scene) return;
-//     if (scene->sceneRect().isEmpty()) return;
-
-//     auto* v = ui->graphicsView;
-
-//     v->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-//     v->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-//     v->setRenderHint(QPainter::SmoothPixmapTransform, true);
-
-//     const QRectF sr = scene->sceneRect();
-//     const QPointF sc = sr.center();
-//     const QRect vp = v->viewport()->rect();
-
-//     if (vp.width() <= 1 || vp.height() <= 1) return;
-
-//     //  오른쪽 180도
-//     const double rotDeg = -180.0;
-
-//     const double w = sr.width();
-//     const double h = sr.height();
-//     const double rad = rotDeg * M_PI / 180.0;
-//     const double c = std::abs(std::cos(rad));
-//     const double s = std::abs(std::sin(rad));
-
-//     const double bboxW = c*w + s*h;
-//     const double bboxH = s*w + c*h;
-
-//     // 가로 꽉 채우기
-//     const double scale = (bboxW > 1e-6)
-//                              ? double(vp.width()) / bboxW
-//                              : 1.0;
-
-//     QTransform t;
-//     t.translate(vp.width() * 0.5, vp.height() * 0.5);
-//     t.scale(scale, scale);
-//     t.rotate(rotDeg);
-//     t.translate(-sc.x(), -sc.y());
-
-//     v->setTransform(t, false);
-// }
-
-
-
-// void MainWindow::()
-// {
-//     if (!ui->graphicsView || !scene) return;
-//     if (scene->sceneRect().isEmpty()) return;
-
-//     auto* v = ui->graphicsView;
-
-//     v->setTransformationAnchor(QGraphicsView::AnchorViewCenter);
-//     v->setResizeAnchor(QGraphicsView::AnchorViewCenter);
-//     v->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-//     v->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-//     v->setRenderHint(QPainter::SmoothPixmapTransform, true);
-
-//     v->resetTransform();
-//     v->fitInView(scene->sceneRect(), Qt::KeepAspectRatio);
-
-//     // 기존 프로젝트 정책(회전 -90)
-//     QTransform t = v->transform();
-//     t.rotate(-90.0);
-//     v->setTransform(t, false);
-
-//     v->centerOn(scene->sceneRect().center());
-// }
 
 // ======================
 // Coordinate transforms
@@ -598,6 +545,7 @@ void MainWindow::onRobotPose(double x, double y, double yaw)
 // ======================
 void MainWindow::onFusedSample(double x_m, double y_m, const QString& ssid, int rssi)
 {
+    qDebug() << "[UI RX fusedSample]" << ssid << x_m << y_m << rssi;
     if (!mapReady_ || !liveLayer_.isReady()) return;
 
     // SSID 리스트 실시간 갱신
@@ -791,6 +739,8 @@ void MainWindow::on_btnSessionLoad_clicked()
 
     statusBar()->showMessage(QString("Loading past heatmap: sid=%1 ...").arg(sid));
 
+    if (sid.isEmpty() || sid.startsWith("(")) { return; }
+    loadedSessionId_ = sid;
     rosThread->requestHeatmap(
         sid,
         (filterSsid_.isEmpty() ? "ALL" : filterSsid_),
@@ -1201,4 +1151,25 @@ void MainWindow::updateLegendOverlayGeometry()
     legendOverlay_->move(x, y);
     legendOverlay_->raise();   //  항상 위로
 }
+
+void MainWindow::onDeleteSessionReply(bool ok,
+                                      const QString& message,
+                                      const QString& deleted_sid)
+{
+    if (!ok) {
+        statusBar()->showMessage("Delete failed: " + message, 3000);
+        return;
+    }
+
+    // 1) 지금 로드 중인 세션이 삭제된 세션이면 Query 상태를 즉시 해제
+    if (loadedSessionId_ == deleted_sid) {
+        onQueryClear();               // queryLayer clear + loadedSessionId_ clear + policy 반영
+    }
+
+    // 2) 선택된 세션 콤보/SSID 콤보를 최신으로 갱신
+    onSessionRefresh();
+
+    statusBar()->showMessage("Deleted: " + deleted_sid, 2000);
+}
+
 

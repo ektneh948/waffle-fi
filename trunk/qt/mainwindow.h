@@ -124,6 +124,9 @@ private:
     // ===== Legend overlay =====
     void initLegendOverlay();
     void updateLegendOverlayGeometry();
+    void onDeleteSessionReply(bool ok,
+                          const QString& message,
+                              const QString& deleted_sid);
 
 private:
     Ui::MainWindow *ui = nullptr;

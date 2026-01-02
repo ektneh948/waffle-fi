@@ -87,6 +87,7 @@ void RosWorker::requestDeleteSession(const QString& session_id)
 
 void RosWorker::run()
 {
+    emit servicesReady();
     // rclcpp init
     if (!rclcpp::ok()) {
         int argc = 0;
@@ -133,10 +134,40 @@ void RosWorker::run()
             if (!msg) return;
             if (msg->ssid.empty()) return;
 
-            const int rssi_i = (int)std::lround(msg->rssi);
-            emit fusedSample(msg->x, msg->y, QString::fromStdString(msg->ssid), rssi_i);
+            RCLCPP_INFO_THROTTLE(
+                node_->get_logger(), *node_->get_clock(), 2000,
+                "[QT RX /wifi/fused] ssid=%s x=%.2f y=%.2f rssi=%.1f",
+                msg->ssid.c_str(), msg->x, msg->y, msg->rssi
+                );
+
+            emit fusedSample(msg->x, msg->y, QString::fromStdString(msg->ssid),
+                             (int)std::lround(msg->rssi));
         }
         );
+
+    // fused_sub_ = node_->create_subscription<wifi_interface::msg::WifiFused>(
+    //     "/wifi/fused", rclcpp::QoS(10),
+    //     [this](wifi_interface::msg::WifiFused::SharedPtr msg)
+    //     {
+    //         if (!msg) return;
+    //         if (msg->ssid.empty()) return;
+    //         RCLCPP_INFO_THROTTLE(
+    //             node_->get_logger(),
+    //             *node_->get_clock(),
+    //             2000,
+    //             "[RX /wifi/fused] ssid=%s x=%.2f y=%.2f rssi=%.1f",
+    //             msg->ssid.c_str(),
+    //             msg->x,
+    //             msg->y,
+    //             msg->rssi
+    //             );
+
+    //         const int rssi_i = (int)std::lround(msg->rssi);
+    //         emit fusedSample(msg->x, msg->y,
+    //                          QString::fromStdString(msg->ssid),
+    //                          rssi_i);
+    //     }
+//);
 
     // /amcl_pose fallback
     emit statusChanged("Subscribing /amcl_pose (fallback when TF missing) ...");
@@ -309,7 +340,7 @@ void RosWorker::run()
 
         if (ssreq.pending) {
             if (!list_ssid_client_ || !list_ssid_client_->service_is_ready()) {
-                emit listSsidsReply(false, "Service not ready: /db/list_ssid", ssreq.session_id, {});
+                emit listSsidsReply(false, "Service not ready: /db/list_ssids", ssreq.session_id, {});
             } else {
                 auto sreq = std::make_shared<wifi_interface::srv::ListSsids::Request>();
                 sreq->session_id = ssreq.session_id.toStdString();
@@ -494,6 +525,21 @@ void RosWorker::run()
 
         QThread::msleep(20);
     }
+
+    auto wait_ready = [&](auto client, const char* name){
+        for (int i=0; i<50 && rclcpp::ok(); ++i) { // 50*100ms = 5초
+            if (client && client->service_is_ready()) return true;
+            QThread::msleep(100);
+        }
+        emit statusChanged(QString("Service not ready (timeout): %1").arg(name));
+        return false;
+    };
+
+    wait_ready(list_sessions_client_, "/db/list_sessions");
+    wait_ready(list_ssid_client_,     "/db/list_ssids");
+    wait_ready(delete_sess_client_,   "/db/delete_session");
+    emit statusChanged("DB services ready.");
+
 
     exec_.remove_node(node_);
     node_.reset();
