@@ -188,7 +188,7 @@
          <property name="minimumSize">
           <size>
            <width>30</width>
-           <height>0</height>
+           <height>10</height>
           </size>
          </property>
          <property name="styleSheet">
@@ -236,6 +236,11 @@
               <height>0</height>
              </size>
             </property>
+            <property name="font">
+             <font>
+              <pointsize>9</pointsize>
+             </font>
+            </property>
             <property name="styleSheet">
              <string notr="true">QLabel#lbKpiSStrName{
   background:#8f8f8f;
@@ -268,6 +273,11 @@
               <width>60</width>
               <height>0</height>
              </size>
+            </property>
+            <property name="font">
+             <font>
+              <pointsize>9</pointsize>
+             </font>
             </property>
             <property name="styleSheet">
              <string notr="true">QLabel#lbKpiSStrVal{
@@ -350,6 +360,11 @@ border-bottom-right-radius:3px;
               <height>0</height>
              </size>
             </property>
+            <property name="font">
+             <font>
+              <pointsize>9</pointsize>
+             </font>
+            </property>
             <property name="styleSheet">
              <string notr="true">QLabel#lbKpiSStrName_3{
   background:#8f8f8f;
@@ -382,6 +397,11 @@ border-bottom-right-radius:3px;
               <width>60</width>
               <height>0</height>
              </size>
+            </property>
+            <property name="font">
+             <font>
+              <pointsize>9</pointsize>
+             </font>
             </property>
             <property name="styleSheet">
              <string notr="true">QLabel#lbKpiSStrVal_3{
@@ -464,6 +484,11 @@ border-bottom-right-radius:3px;
               <height>0</height>
              </size>
             </property>
+            <property name="font">
+             <font>
+              <pointsize>9</pointsize>
+             </font>
+            </property>
             <property name="styleSheet">
              <string notr="true">QLabel#lbKpiSStrName_4{
   background:#8f8f8f;
@@ -497,6 +522,11 @@ border-bottom-right-radius:3px;
               <height>0</height>
              </size>
             </property>
+            <property name="font">
+             <font>
+              <pointsize>9</pointsize>
+             </font>
+            </property>
             <property name="styleSheet">
              <string notr="true">QLabel#lbKpiSStrVal_4{
   background:#9CFF4A;
@@ -529,7 +559,7 @@ border-bottom-right-radius:3px;
          </property>
          <property name="sizeHint" stdset="0">
           <size>
-           <width>70</width>
+           <width>40</width>
            <height>20</height>
           </size>
          </property>
@@ -1069,6 +1099,12 @@ QFrame#segFrame QToolButton:hover:!checked {
                </item>
                <item>
                 <widget class="QGroupBox" name="groupBox">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
                  <property name="minimumSize">
                   <size>
                    <width>0</width>
@@ -1078,32 +1114,15 @@ QFrame#segFrame QToolButton:hover:!checked {
                  <property name="title">
                   <string/>
                  </property>
-                 <widget class="QPushButton" name="btnSessionDelete">
-                  <property name="geometry">
-                   <rect>
-                    <x>12</x>
-                    <y>94</y>
-                    <width>80</width>
-                    <height>25</height>
-                   </rect>
-                  </property>
-                  <property name="text">
-                   <string>Delete</string>
-                  </property>
-                 </widget>
-                 <widget class="QPushButton" name="btnQueryClear">
-                  <property name="geometry">
-                   <rect>
-                    <x>12</x>
-                    <y>39</y>
-                    <width>80</width>
-                    <height>25</height>
-                   </rect>
-                  </property>
-                  <property name="text">
-                   <string>Clear</string>
-                  </property>
-                 </widget>
+                 <layout class="QVBoxLayout" name="verticalLayout_10">
+                  <item>
+                   <widget class="QPushButton" name="btnSessionDelete">
+                    <property name="text">
+                     <string>Delete</string>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
                 </widget>
                </item>
               </layout>
@@ -1274,10 +1293,13 @@ QFrame#segFrame QToolButton:hover:!checked {
              <property name="orientation">
               <enum>Qt::Orientation::Vertical</enum>
              </property>
+             <property name="sizeType">
+              <enum>QSizePolicy::Policy::Fixed</enum>
+             </property>
              <property name="sizeHint" stdset="0">
               <size>
                <width>20</width>
-               <height>13</height>
+               <height>600</height>
               </size>
              </property>
             </spacer>

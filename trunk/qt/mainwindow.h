@@ -12,7 +12,8 @@
 #include <QList>
 #include <QGraphicsItem>
 #include <QPainter>
-
+#include <QElapsedTimer>
+#include <QLabel>
 #include "heatlayer.h"
 
 class GridOverlayItem : public QGraphicsItem {
@@ -50,8 +51,6 @@ private:
     QSize size_;
     int step_;
 };
-
-
 
 
 // forward
@@ -183,8 +182,28 @@ private:
     void rebuildSimHeat();                   // simLayer를 "핀 전체" 기준으로 재생성
     void clearSimPinsAndHeat();
     void addSimPinAt(int px, int py);
+    void updateKpiBar();
 
 private:
+    QElapsedTimer rxTimer_;
+    int rxCount_ = 0;
+    double rxHz_ = 0.0;
+
+    QString elideToLabel(QLabel* lb, const QString& s) const;
+    // ===== KPI state =====
+    int lastRssi_ = 0;
+    QString lastSsid_;
+
+    double lastX_ = 0.0;
+    double lastY_ = 0.0;
+    double lastYaw_ = 0.0;
+
+    // rate 계산
+    int fusedCount_ = 0;
+    double fusedRate_ = 0.0;
+    QElapsedTimer fusedRateTimer_;
+    QTimer* kpiTimer_ = nullptr;
+
     Ui::MainWindow *ui = nullptr;
 
     QVector<QGraphicsItem*> simPins_;

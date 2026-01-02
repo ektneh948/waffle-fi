@@ -14,6 +14,8 @@
 #include <QStatusBar>
 #include <QtMath>
 #include <cmath>
+#include <QFontMetrics>
+#include <QLabel>
 
 static inline double rad2deg(double r) { return r * 180.0 / M_PI; }
 
@@ -196,6 +198,14 @@ MainWindow::MainWindow(QWidget *parent)
 
     rosThread->start();
 
+    fusedRateTimer_.start();
+
+    rxTimer_.start();
+    auto* kpiTimer = new QTimer(this);
+    connect(kpiTimer, &QTimer::timeout, this, [this](){ updateKpiBar(); });
+    kpiTimer->start(250);
+
+
     // ===== UI connects =====
     connect(ui->chkShowHeatmap, &QCheckBox::toggled, this, &MainWindow::onLayerHeatmap);
     connect(ui->chkShowRobot,   &QCheckBox::toggled, this, &MainWindow::onLayerRobot);
@@ -222,9 +232,9 @@ MainWindow::MainWindow(QWidget *parent)
                 this, &MainWindow::onMeasureToggle);
     }
 
-    if (ui->btnQueryClear) {
-        connect(ui->btnQueryClear, &QPushButton::clicked, this, &MainWindow::onQueryClear);
-    }
+    // if (ui->btnQueryClear) {
+    //     connect(ui->btnQueryClear, &QPushButton::clicked, this, &MainWindow::onQueryClear);
+    // }
 
     // Refresh 버튼
     if (ui->btnSessionRefresh) {
@@ -375,6 +385,7 @@ void MainWindow::resizeEvent(QResizeEvent* event)
     QMainWindow::resizeEvent(event);
     applyViewTransform();
     updateLegendOverlayGeometry();
+    updateKpiBar(); // resize 시 현재 폭 기준으로 다시 elide
 }
 
 void MainWindow::showEvent(QShowEvent* e)
@@ -592,6 +603,10 @@ void MainWindow::onRobotPose(double x, double y, double yaw)
         poseReady_ = true;
         robotItem->setVisible(ui->chkShowRobot->isChecked() && poseReady_);
     }
+
+    lastX_ = x;
+    lastY_ = y;
+    lastYaw_ = yaw;
 }
 
 // ======================
@@ -619,6 +634,18 @@ void MainWindow::onFusedSample(double x_m, double y_m, const QString& ssid, int 
     else                 { legendEma_ = alpha * rssi + (1.0 - alpha) * legendEma_; }
 
     if (legendOverlay_) legendOverlay_->setValueDbm(legendEma_);
+
+    lastRssi_ = rssi;
+    lastSsid_ = ssid;
+    fusedCount_++;
+
+    rxCount_++;
+    const qint64 ms = rxTimer_.elapsed();
+    if (ms >= 1000) {
+        rxHz_ = (rxCount_ * 1000.0) / double(ms);
+        rxCount_ = 0;
+        rxTimer_.restart();
+    }
 }
 
 void MainWindow::onMeasureToggle()
@@ -1392,4 +1419,37 @@ void MainWindow::setGridVisible(bool on)
     if (gridItem_) gridItem_->setVisible(on);
 }
 
+void MainWindow::updateKpiBar()
+{
+    // 1) RSSI EMA (dBm) : legendEma_는 이미 onFusedSample에서 갱신 중
+    if (ui->lbKpiSStrVal) {
+        if (!legendEmaInit_) ui->lbKpiSStrVal->setText("--");
+        else ui->lbKpiSStrVal->setText(QString::number(legendEma_, 'f', 1)); // -53.2
+    }
 
+    // 2) Rate (Hz) : fusedSample 수신률(최근 1초)
+    //    (아래 "수신률 계산" 멤버가 필요함)
+    if (ui->lbKpiSStrVal_3) {
+        ui->lbKpiSStrVal_3->setText(QString::number(rxHz_, 'f', 1)); // 12.4
+    }
+
+    // 3) #APs : 실시간으로 수신된 SSID 개수 (ALL 제외)
+    if (ui->lbKpiSStrVal_4) {
+        int nAps = ssidSetLive_.size();
+        if (ssidSetLive_.contains("ALL")) nAps -= 1;
+        ui->lbKpiSStrVal_4->setText(QString::number(qMax(0, nAps))); // 5
+    }
+}
+
+
+QString MainWindow::elideToLabel(QLabel* lb, const QString& s) const
+{
+    if (!lb) return s;
+    // 레이아웃 적용 전/후 둘 다 안전하게 폭 확보
+    int w = lb->contentsRect().width();
+    if (w <= 0) w = lb->width();
+    if (w <= 0) return s;
+
+    QFontMetrics fm(lb->font());
+    return fm.elidedText(s, Qt::ElideRight, w);
+}
