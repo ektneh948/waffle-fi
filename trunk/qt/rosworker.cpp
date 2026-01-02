@@ -125,7 +125,8 @@ void RosWorker::run()
         }
         );
 
-    // /wifi/fused (UI only)
+    // /wifi/fused [1]
+
     emit statusChanged("Subscribing /wifi/fused ...");
     fused_sub_ = node_->create_subscription<wifi_interface::msg::WifiFused>(
         "/wifi/fused", rclcpp::QoS(10),
@@ -145,29 +146,41 @@ void RosWorker::run()
         }
         );
 
+    // /wifi/fused [2]
+
     // fused_sub_ = node_->create_subscription<wifi_interface::msg::WifiFused>(
     //     "/wifi/fused", rclcpp::QoS(10),
     //     [this](wifi_interface::msg::WifiFused::SharedPtr msg)
     //     {
     //         if (!msg) return;
     //         if (msg->ssid.empty()) return;
+
+    //         // 1) pose가 아직 없으면(초기) 히트맵 찍을 위치가 없음 -> 드랍하거나 msg 좌표 fallback 선택
+    //         if (!have_pose_) {
+    //             RCLCPP_WARN_THROTTLE(
+    //                 node_->get_logger(), *node_->get_clock(), 2000,
+    //                 "[QT RX /wifi/fused] pose not ready yet -> drop (ssid=%s rssi=%.1f)",
+    //                 msg->ssid.c_str(), msg->rssi
+    //                 );
+    //             return;
+    //         }
+
+    //         // 2) /amcl_pose 또는 TF에서 갱신된 최신 로봇 위치 사용
+    //         const double x = last_x_;
+    //         const double y = last_y_;
+    //         const int rssi_i = (int)std::lround(msg->rssi);
+
     //         RCLCPP_INFO_THROTTLE(
-    //             node_->get_logger(),
-    //             *node_->get_clock(),
-    //             2000,
-    //             "[RX /wifi/fused] ssid=%s x=%.2f y=%.2f rssi=%.1f",
-    //             msg->ssid.c_str(),
-    //             msg->x,
-    //             msg->y,
-    //             msg->rssi
+    //             node_->get_logger(), *node_->get_clock(), 2000,
+    //             "[QT RX /wifi/fused] ssid=%s rssi=%.1f | use pose x=%.2f y=%.2f",
+    //             msg->ssid.c_str(), msg->rssi, x, y
     //             );
 
-    //         const int rssi_i = (int)std::lround(msg->rssi);
-    //         emit fusedSample(msg->x, msg->y,
-    //                          QString::fromStdString(msg->ssid),
-    //                          rssi_i);
+    //         emit fusedSample(x, y, QString::fromStdString(msg->ssid), rssi_i);
     //     }
-//);
+    //     );
+
+
 
     // /amcl_pose fallback
     emit statusChanged("Subscribing /amcl_pose (fallback when TF missing) ...");

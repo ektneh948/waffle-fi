@@ -75,6 +75,7 @@ private slots:
                           const QString& session_id,
                           const QList<QString>& ssids);
     QString currentSessionIdText() const;
+    void onClearPinsClicked();
 
 private:
     double viewRotateDeg_ = -180.0;
@@ -127,9 +128,17 @@ private:
     void onDeleteSessionReply(bool ok,
                           const QString& message,
                               const QString& deleted_sid);
+    void applySimBandwidthToLayer();
+    void updateSimFromUi();
+    void rebuildSimHeat();                   // simLayer를 "핀 전체" 기준으로 재생성
+    void clearSimPinsAndHeat();
+    void addSimPinAt(int px, int py);
 
 private:
     Ui::MainWindow *ui = nullptr;
+
+    QVector<QGraphicsItem*> simPins_;
+    QVector<QPoint>         simPinPixels_;
 
     // Graphics
     QGraphicsScene* scene = nullptr;

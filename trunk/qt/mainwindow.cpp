@@ -126,6 +126,20 @@ MainWindow::MainWindow(QWidget *parent)
         });
     }
 
+    connect(ui->chkSimEnable, &QCheckBox::toggled, this, [this](bool on){
+        simEnable_ = on;
+    });
+
+    if (ui->cbSimBandwidth) {
+        connect(ui->cbSimBandwidth, QOverload<int>::of(&QComboBox::currentIndexChanged),
+                this, [this](int){
+                    const int d = ui->cbSimBandwidth->currentText().toInt();   // "20" "30" 이런 형태 가정
+                    simBandDiameterPx_ = qMax(1, d);
+                    applySimBandwidthToLayer(); // 아래에 구현
+                });
+    }
+
+
     if (ui->tbLayers) {
         connect(ui->tbLayers, &QToolButton::toggled, this, [=](bool on){
             if (on) {
@@ -138,6 +152,7 @@ MainWindow::MainWindow(QWidget *parent)
             }
         });
     }
+
 
     //  디폴트: autoExclusive 비활성 + 패널은 닫힌 상태로 시작(원하는 경우)
     closeLeftPanel();
@@ -199,6 +214,25 @@ MainWindow::MainWindow(QWidget *parent)
                 this, &MainWindow::onSessionRefresh);
     }
 
+    // Sim bandwidth (diameter in px)
+    if (ui->cbSimBandwidth) {
+        connect(ui->cbSimBandwidth, QOverload<int>::of(&QComboBox::currentIndexChanged),
+                this, [this](int){
+                    // 직경(px) 갱신
+                    bool ok=false;
+                    int d = ui->cbSimBandwidth->currentText().trimmed().toInt(&ok);
+                    if (ok) simBandDiameterPx_ = qMax(1, d);
+
+                    // 핀들이 있으면 히트맵 전체 재그리기
+                    rebuildSimHeat();
+                });
+    }
+
+    if (ui->btnClearPins) {
+        connect(ui->btnClearPins, &QPushButton::clicked,
+                this, &MainWindow::onClearPinsClicked);
+    }
+
     // 세션 콤보 변경 시 ListSsid 호출
     // if (ui->cbSessionId) {
     //     connect(ui->cbSessionId,
@@ -209,7 +243,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->cbSessionId, QOverload<int>::of(&QComboBox::currentIndexChanged),
             this, &MainWindow::onSessionComboChanged);
 
-
+    updateSimFromUi();
     updateUiByContext();
 
     // 앱 시작 시 자동 refresh
@@ -887,16 +921,22 @@ void MainWindow::applyLayersPolicy()
 
     if (!showHeat) return;
 
-    const bool queryCtx = !loadedSessionId_.isEmpty();
-
-    if (queryCtx && queryLayer_.isReady()) {
+    // Query 우선
+    if (!loadedSessionId_.isEmpty() && queryLayer_.isReady()) {
         queryLayer_.setVisible(true);
         return;
     }
 
-    // 기본은 live
+    // Sim enable이면 sim 우선
+    if (simEnable_ && simLayer_.isReady()) {
+        simLayer_.setVisible(true);
+        return;
+    }
+
+    // 기본 live
     liveLayer_.setVisible(true);
 }
+
 
 void MainWindow::onLayerHeatmap(bool)
 {
@@ -917,6 +957,7 @@ void MainWindow::onLayerPins(bool)
 // ======================
 // Click handling (nav goal)
 // ======================
+
 bool MainWindow::eventFilter(QObject* obj, QEvent* ev)
 {
     if (obj == ui->graphicsView->viewport() &&
@@ -925,8 +966,18 @@ bool MainWindow::eventFilter(QObject* obj, QEvent* ev)
         auto* me = static_cast<QMouseEvent*>(ev);
         const QPointF scenePos = ui->graphicsView->mapToScene(me->pos());
 
-        // Left click -> nav goal
-        if (me->button() == Qt::LeftButton) {
+        //  sim 모드면: 왼쪽 클릭을 "핀 찍기"로 사용
+        if (simEnable_ && me->button() == Qt::LeftButton) {
+            int px=0, py=0;
+            if (!sceneToMapPixel(scenePos, px, py)) return true;
+
+            // 여기서 sim pin 생성/이동 처리
+            addSimPinAt(px, py);   // <-- 너가 가진 구현으로 연결
+            return true;
+        }
+
+        //  sim 아닐 때만: 왼쪽 클릭 네비게이션
+        if (!simEnable_ && me->button() == Qt::LeftButton) {
             int px=0, py=0;
             if (!sceneToMapPixel(scenePos, px, py)) return true;
 
@@ -936,10 +987,36 @@ bool MainWindow::eventFilter(QObject* obj, QEvent* ev)
             if (rosThread) rosThread->requestNavigateTo(x_m, y_m, 0.0);
             return true;
         }
+
         return true;
     }
     return false;
 }
+
+
+// bool MainWindow::eventFilter(QObject* obj, QEvent* ev)
+// {
+//     if (obj == ui->graphicsView->viewport() &&
+//         ev->type() == QEvent::MouseButtonPress) {
+
+//         auto* me = static_cast<QMouseEvent*>(ev);
+//         const QPointF scenePos = ui->graphicsView->mapToScene(me->pos());
+
+//         // Left click -> nav goal
+//         if (me->button() == Qt::LeftButton) {
+//             int px=0, py=0;
+//             if (!sceneToMapPixel(scenePos, px, py)) return true;
+
+//             double x_m=0.0, y_m=0.0;
+//             if (!pixelToMap(px, py, x_m, y_m)) return true;
+
+//             if (rosThread) rosThread->requestNavigateTo(x_m, y_m, 0.0);
+//             return true;
+//         }
+//         return true;
+//     }
+//     return false;
+// }
 
 // ======================
 // Legend overlay
@@ -1170,6 +1247,160 @@ void MainWindow::onDeleteSessionReply(bool ok,
     onSessionRefresh();
 
     statusBar()->showMessage("Deleted: " + deleted_sid, 2000);
+}
+
+// void MainWindow::addSimPinAt(int px, int py)
+// {
+//     if (!scene) return;
+
+//     // 1) pin
+//     auto* pin = scene->addEllipse(-4, -4, 8, 8, QPen(Qt::blue), QBrush(Qt::blue));
+//     pin->setPos(px, py);
+//     pin->setZValue(20);
+//     pin->setFlag(QGraphicsItem::ItemIgnoresTransformations, true);
+//     pin->setFlag(QGraphicsItem::ItemIsMovable, true);
+
+//     // 2) sim heat
+//     if (!mapReady_) return;
+
+//     // bandwidth가 아직 simLayer에 반영 안 됐을 수 있으니 한 번 보장
+//     applySimBandwidthToLayer();
+
+//     if (!simLayer_.isReady()) return;
+
+//     const float intensity = 1.0f; // 일단 최대로 (원하면 TxPower로 변환 가능)
+//     simLayer_.addPointMean(px + 1, py + 1, intensity);
+//     simLayer_.flushMean();
+
+//     applyLayersPolicy(); // simEnable + heat 체크 상태에 따라 보이게
+// }
+
+
+void MainWindow::addSimPinAt(int px, int py)
+{
+    if (!scene) return;
+
+    // 1) 핀 아이템 생성
+    auto* pin = scene->addEllipse(-4, -4, 8, 8, QPen(Qt::blue), QBrush(Qt::blue));
+    pin->setPos(px, py);
+    pin->setZValue(20);
+    pin->setFlag(QGraphicsItem::ItemIgnoresTransformations, true);
+    pin->setFlag(QGraphicsItem::ItemIsMovable, true);
+
+    // 2) 목록에 저장
+    simPins_.push_back(pin);
+    simPinPixels_.push_back(QPoint(px, py));
+
+    // 3) 히트맵은 "전체 핀" 기준으로 다시 그리기
+    rebuildSimHeat();
+}
+
+
+// void MainWindow::applySimBandwidthToLayer()
+// {
+//     if (!mapReady_ || !simLayer_.isReady()) return;
+
+//     // simBandDiameterPx_는 "직경"
+//     const int r = qMax(1, simBandDiameterPx_ / 2);
+
+//     // HeatLayer가 radius 변경 API가 없다면 -> re-init이 가장 안전
+//     // (주의: 기존 simLayer_ 내용은 초기화됨)
+//     const int opacity = 160;
+//     simLayer_.clear(true);
+
+//     // ⚠️ HeatLayer::init(scene, size, z, radiusPx, opacity) 라는 형태를 사용 중이므로 재호출
+//     simLayer_.init(scene, mapImageSize_, /*z=*/7, r, opacity);
+
+//     // sim 모드에서 보이게 하려면(그리고 heat 체크가 켜져있다면)
+//     if (ui->chkShowHeatmap && ui->chkShowHeatmap->isChecked() && simEnable_) {
+//         simLayer_.setVisible(true);
+//     }
+// }
+
+void MainWindow::updateSimFromUi()
+{
+    // enable은 이미 connect로 simEnable_ 바꾸고 있으니,
+    // 여기서는 bandwidth만 반영해도 됩니다.
+    if (ui->cbSimBandwidth) {
+        bool ok = false;
+        const int d = ui->cbSimBandwidth->currentText().trimmed().toInt(&ok);
+        if (ok) simBandDiameterPx_ = qMax(1, d);
+    }
+    applySimBandwidthToLayer();
+}
+
+void MainWindow::applySimBandwidthToLayer()
+{
+    if (!mapReady_ || mapImageSize_.isEmpty() || !scene) return;
+
+    // 직경(px) -> 반경(px)
+    const int r = qMax(1, simBandDiameterPx_ / 2);
+    const int opacity = 160;
+
+    // simLayer_는 bandwidth 따라 radius가 달라져야 하므로 재-init (가장 확실)
+    // 기존 sim 표시 내용은 reset됨
+    if (simLayer_.isReady()) {
+        simLayer_.clear(true);
+    }
+    simLayer_.init(scene, mapImageSize_, /*z=*/7, r, opacity);
+
+    // 표시 정책은 applyLayersPolicy()가 최종 결정
+    applyLayersPolicy();
+}
+
+void MainWindow::rebuildSimHeat()
+{
+    if (!mapReady_ || mapImageSize_.isEmpty() || !scene) return;
+    if (!simLayer_.isReady()) return;
+
+    // 직경(px) -> 반경(px)
+    const int r = qMax(1, simBandDiameterPx_ / 2);
+
+    // ⚠️ HeatLayer가 radius 변경 API가 없다면:
+    // 재-init이 필요함. 대신 "핀 데이터"는 simPinPixels_에 있으니 다시 그릴 수 있음.
+    const int opacity = 160;
+    simLayer_.clear(true);
+    simLayer_.init(scene, mapImageSize_, /*z=*/7, r, opacity);
+
+    // 저장된 모든 핀을 다시 찍기
+    const float intensity = 1.0f;
+    for (const auto& p : simPinPixels_) {
+        const int px = p.x();
+        const int py = p.y();
+        if (px < 0 || py < 0 || px >= mapImageSize_.width() || py >= mapImageSize_.height())
+            continue;
+
+        simLayer_.addPointMean(px + 1, py + 1, intensity);
+    }
+
+    simLayer_.flushMean();
+
+    // 표시 정책 반영 (simEnable + chkShowHeatmap 상태)
+    applyLayersPolicy();
+}
+void MainWindow::onClearPinsClicked()
+{
+    clearSimPinsAndHeat();
+}
+
+void MainWindow::clearSimPinsAndHeat()
+{
+    // 핀 아이템 삭제
+    for (auto* it : simPins_) {
+        if (!it) continue;
+        scene->removeItem(it);
+        delete it;
+    }
+    simPins_.clear();
+    simPinPixels_.clear();
+
+    // sim 히트맵 삭제
+    if (simLayer_.isReady()) {
+        simLayer_.clear(true);
+        simLayer_.flushMean();
+    }
+
+    applyLayersPolicy();
 }
 
 

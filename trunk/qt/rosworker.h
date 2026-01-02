@@ -95,6 +95,7 @@ signals:
     // Nav status
     void goalStatus(const QString& msg);
     void servicesReady();
+    void addSimPinAt(int px, int py);
 
 protected:
     void run() override;
