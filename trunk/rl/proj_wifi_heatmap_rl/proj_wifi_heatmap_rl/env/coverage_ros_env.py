@@ -12,6 +12,7 @@ from gymnasium import spaces
 
 import rclpy
 from rclpy.node import Node
+from rclpy.qos import QoSProfile, QoSReliabilityPolicy, QoSHistoryPolicy, QoSDurabilityPolicy
 
 from geometry_msgs.msg import Twist, Point, PoseWithCovarianceStamped
 from sensor_msgs.msg import LaserScan
@@ -65,11 +66,13 @@ class RosCoverageConfig:
 
     # cmd_vel 매핑
     # v_forward: float = 0.18
-    # w_forward: float = 0.05
-    # w_turn: float = 0.9
+    # v_turn: float = 0.5
+    # w_forward: float = 0.0
+    # w_turn: float = 1.2
     v_forward: float = 0.18
     v_turn: float = 0.5
-    w_forward: float = 0.0
+    # w_forward: float = 0.0
+    w_forward: float = 0.05
     w_turn: float = 1.2
 
     # 토픽/서비스
@@ -120,8 +123,16 @@ class RosCoverageEnv(gym.Env):
             rclpy.init(args=None)
         self.node = Node("coverage_ros_env")
 
-        self.cmd_pub = self.node.create_publisher(Twist, self.cfg.cmd_vel_topic, 10)
-        self.scan_sub = self.node.create_subscription(LaserScan, self.cfg.scan_topic, self._on_scan, 10)
+        qos_cmd = QoSProfile(history=QoSHistoryPolicy.KEEP_LAST, depth=1)
+        qos_scan = QoSProfile(
+            history=QoSHistoryPolicy.KEEP_LAST,
+            depth=5,
+            reliability=QoSReliabilityPolicy.BEST_EFFORT,
+            durability=QoSDurabilityPolicy.VOLATILE
+        )
+
+        self.cmd_pub = self.node.create_publisher(Twist, self.cfg.cmd_vel_topic, qos_cmd)
+        self.scan_sub = self.node.create_subscription(LaserScan, self.cfg.scan_topic, self._on_scan, qos_scan)
         self.odom_sub = self.node.create_subscription(Odometry, self.cfg.odom_topic, self._on_odom, 10)
 
         # AMCL pose cache
@@ -203,7 +214,7 @@ class RosCoverageEnv(gym.Env):
         self._wait_sensors(timeout_sec=3.0)
 
         # 2.5) (임시) 리셋 후 왼쪽 회전
-        self._reset_turn_left_random()
+        # self._reset_turn_left_random()
 
         # 3) 첫 visited 마킹
         x, y, _ = self._get_pose()
@@ -228,7 +239,7 @@ class RosCoverageEnv(gym.Env):
         self.step_count += 1
         self._last_action = int(action)
 
-        # 1) action -> cmd_vel
+        # # 1) action -> cmd_vel
         # if action == 0:      # forward
         #     v, w = self.cfg.v_forward, 0.0
         #     self.forward_count += 1
@@ -257,11 +268,13 @@ class RosCoverageEnv(gym.Env):
             v, w = self.cfg.w_forward, -self.cfg.v_turn
             self._turn_streak = 0
         elif action == 3:    # left-turn
-            v, w = self.cfg.w_forward, self.cfg.w_turn
+            # v, w = self.cfg.w_forward, self.cfg.w_turn
+            v, w = 0.0, self.cfg.w_turn
             self.turn_count += 1
             self._turn_streak += 1
         elif action == 4:    # right-turn
-            v, w = self.cfg.w_forward, -self.cfg.w_turn
+            # v, w = self.cfg.w_forward, -self.cfg.w_turn
+            v, w = 0.0, -self.cfg.w_turn
             self.turn_count += 1
             self._turn_streak += 1
         elif action == 5:    # stop
@@ -276,6 +289,7 @@ class RosCoverageEnv(gym.Env):
         # 3) 보상/종료 계산
         reward = self.cfg.penalty_step
         # penalty_turn
+        # if action in (1, 2):
         if action in (3, 4):
             reward += self.cfg.penalty_turn
         # penalty_turn_streak
@@ -292,6 +306,7 @@ class RosCoverageEnv(gym.Env):
         # reward_forward_after_turn
         prev_action = self._prev_action
         self._prev_action = action
+        # if prev_action in (1,2) and action in (0):
         if prev_action in (3,4) and action in (0,1,2):
             reward += self.cfg.reward_forward_after_turn
         # coverage
