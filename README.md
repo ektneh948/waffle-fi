@@ -21,14 +21,17 @@ WAFFLE-FI는 **강화학습 기반 커버리지 탐색 로봇**을 이용해 **�
 ### 🔧 Hardware & Sensor
 
 - ESP32 Wi-Fi Scan
+- Linux Device Driver
 
 ### 🧠 System Call & Data
 
-- Linux Device Driver (/dev/rssi_driver_table)
+- ROS2
+- Reinforcement Learning
+- DB (SQLite)
 
 ### 🖥️ User Interface
 
-- Qt GUI (Heatmap / Session / Simulation)
+- Qt GUI (Heatmap / Simulation)
 
 ---
 ## ⭐ 핵심 기능
@@ -90,10 +93,6 @@ WAFFLE-FI는 **강화학습 기반 커버리지 탐색 로봇**을 이용해 **�
 - 세션 기반 데이터 관리
 - SSID 선택 및 ALL 모드 지원
 - 실시간 / 저장 데이터 히트맵 렌더링
-
-## 6. 역할 및 기여
-
-## 7. 트러블 슈팅
 
 
 
